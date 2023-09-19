@@ -1,0 +1,214 @@
+package ai.asleep.asleep_sdk_android_sampleapp
+
+import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentHomeBinding
+import ai.asleep.asleepsdk.data.Stat
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.fragment.app.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class HomeFragment : Fragment() {
+
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
+    private val sharedViewModel: MainViewModel by viewModels()
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val fragmentManager = requireActivity().supportFragmentManager
+        val transaction = fragmentManager.beginTransaction()
+
+        sharedViewModel.reportLiveData.observe(viewLifecycleOwner) { report ->
+            if (report != null) {
+                val reportText =
+                        "${getString(R.string.report_time_range)} : ${changeTimeFormat(report.session?.startTime)} ~ ${changeTimeFormat(report.session?.endTime)}\n" +
+                        "${getString(R.string.report_session_state)} : ${report.session?.state}\n" +
+                        "Missing Data Ratio : " +report.missingDataRatio + "\n" +
+                        "Peculiarities : " +report.peculiarities
+                val statText = if (report.stat != null) getStatText(report.stat!!) else null
+                binding.apply {
+                    llHomeReport.visibility = View.VISIBLE
+                    tvNotice.visibility = View.INVISIBLE
+
+                    tvSessionId.text = report.session?.id
+                    tvReport.text = reportText
+                    tvStat.text = statText?: "null"
+                    tvSleepStages.text = report.session?.sleepStages.toString()
+                    tvBreathStages.text = report.session?.breathStages.toString()
+                }
+            } else {
+                binding.apply {
+                    llHomeReport.visibility = View.INVISIBLE
+                    tvNotice.visibility = View.VISIBLE
+                }
+            }
+        }
+
+        binding.apply {
+            btnTrackingStart.setOnClickListener {
+                if (ActivityCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                    sharedViewModel.setStartTrackingTime()
+                    transaction.replace(R.id.fragment_container_view, TrackingFragment())
+                    transaction.commit()
+                } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.POST_NOTIFICATIONS), 0)
+                    } else {
+                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.RECORD_AUDIO), 0)
+                    }
+                }
+            }
+            btnRefreshReport.setOnClickListener { refreshReport() }
+            btnIgnoreBatteryOpt.setOnClickListener { ignoreBatteryOptimizations() }
+            val idText = "user Id: " + SampleApplication.userId
+            tvId.text = idText
+
+//            btnReports.setOnClickListener {
+//                transaction.replace(R.id.fragment_container_view, ReportsFragment())
+//                transaction.commit()
+//            }
+//            btnDeleteReport.setOnClickListener {
+//                val sessionId: String = sharedViewModel.sessionIdLiveData.value ?: ""
+//                if (sessionId == "") {
+//                    Toast.makeText(requireActivity(), "Delete error: No session ID!", Toast.LENGTH_SHORT).show()
+//                } else {
+//                    if (SampleApplication.userId == null) {
+//                        Toast.makeText(requireActivity(), "Report can't be deleted without an user ID", Toast.LENGTH_SHORT).show()
+//                    } else {
+//                        deleteReport(sessionId)
+//                    }
+//                }
+//            }
+//            btnDeleteUser.setOnClickListener {
+//                if (SampleApplication.userId == null) {
+//                    Toast.makeText(requireActivity(), "Delete error: No user ID!", Toast.LENGTH_SHORT).show()
+//                } else {
+//                    deleteUser()
+//                }
+//            }
+        }
+    }
+
+    private fun getStatText(stat: Stat): String {
+        return "SleepLatency: " + stat.sleepLatency + "\n" +
+                "WakeLatency: " + stat.wakeupLatency + "\n" +
+                "SleepTime: " + stat.sleepTime + "\n" +
+                "WakeTime: " + stat.wakeTime + "\n" +
+                "TimeInWake: " + stat.timeInWake + "\n" +
+                "TimeInSleep: " + stat.timeInSleep + "\n" +
+                "TimeInBed: " + stat.timeInBed + "\n" +
+                "TimeInSleepPeriod: " + stat.timeInSleepPeriod + "\n" +
+                "TimeInWake: " + stat.timeInRem + "\n" +
+                "TimeInLight: " + stat.timeInLight + "\n" +
+                "TimeInDeep: " + stat.timeInDeep + "\n" +
+                "TimeInStableBreath: " + stat.timeInStableBreath + "\n" +
+                "TimeInUnstableBreath: " + stat.timeInUnstableBreath + "\n" +
+                "SleepEfficiency: " + stat.sleepEfficiency + "\n" +
+                "WakeRatio: " + stat.wakeRatio + "\n" +
+                "SleepRatio: " + stat.sleepRatio + "\n" +
+                "RemRatio: " + stat.remRatio + "\n" +
+                "LightRatio: " + stat.lightRatio + "\n" +
+                "DeepRatio: " + stat.deepRatio + "\n" +
+                "StableBreathRatio: " + stat.stableBreathRatio + "\n" +
+                "UnstableBreathRatio: " + stat.unstableBreathRatio + "\n" +
+                "BreathingPattern: " + stat.breathingPattern + "\n" +
+                "BreathingIndex: " + stat.breathingIndex
+    }
+
+    private fun refreshReport() {
+        val sessionId: String = sharedViewModel.sessionIdLiveData.value ?: ""
+        if (sessionId == "") {
+            Toast.makeText(requireActivity(), "Refresh error: No session ID!", Toast.LENGTH_SHORT).show()
+        } else {
+            if(SampleApplication.userId == null) {
+                Toast.makeText(requireActivity(), "Report can't get Report without an user ID.", Toast.LENGTH_SHORT).show()
+            } else {
+                sharedViewModel.getReport()
+            }
+        }
+    }
+
+    @SuppressLint("BatteryLife")
+    private fun ignoreBatteryOptimizations() {
+        val context: Context = requireContext()
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (pm.isIgnoringBatteryOptimizations(context.packageName)) {
+            Toast.makeText(requireActivity(), "Battery optimization is already being ignored.", Toast.LENGTH_SHORT).show()
+        } else {
+            val intent = Intent()
+            intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+            intent.data = Uri.parse("package:${context.packageName}")
+            startActivity(intent)
+        }
+    }
+
+//    private fun deleteReport(sessionId: String) {
+//        val reports = Asleep.createReports(SampleApplication.asleepConfig)
+//        reports?.deleteReport(sessionId, object : Reports.DeleteReportListener {
+//            override fun onSuccess(sessionId: String?) {
+//                Log.d(">>>>> deleteReport", "onSuccess!")
+//                activity?.runOnUiThread {
+//                    binding.tvReport.text = getString(R.string.report_no_session_id)
+//                }
+//                sharedViewModel.setSessionId("")
+//            }
+//
+//            override fun onFail(errorCode: Int, detail: String) {
+//                Log.d(">>>>> deleteReport", "onFail: ")
+//            }
+//        })
+//    }
+
+//    private fun deleteUser() {
+//        Asleep.deleteUser(object : Asleep.DeleteUserIdListener {
+//            override fun onSuccess(userId: String?) {
+//                if (SampleApplication.userId == userId) {
+//                    Log.d(">>>>> deleteUser", "onSuccess!")
+//                    with (SampleApplication.sharedPref.edit()) {
+//                        putString("user_id", null)
+//                        apply()
+//                    }
+//                    SampleApplication.setUserId(null)
+//
+//                    val text = "user Id: " + SampleApplication.userId + " (please close and restart the app)"
+//                    activity?.runOnUiThread {
+//                        binding.tvId.text = text
+//                    }
+//                }
+//            }
+//
+//            override fun onFail(errorCode: Int, detail: String) {
+//                Log.d(">>>>> deleteUser", "onFail: ")
+//            }
+//        })
+//    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
