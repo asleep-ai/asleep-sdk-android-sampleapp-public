@@ -1,6 +1,7 @@
 package ai.asleep.asleep_sdk_android_sampleapp
 
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentTrackingBinding
+import ai.asleep.asleepsdk.AsleepErrorCode
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -36,8 +37,10 @@ class TrackingFragment : Fragment() {
 
         sharedViewModel.errorCodeLiveData.observe(viewLifecycleOwner) { errorCode ->
             Toast.makeText(requireActivity(), ">>>>>> Error : $errorCode", Toast.LENGTH_SHORT).show()
-            moveToHomeScreen()
-            stopSleepTracking()
+            if (errorCode == AsleepErrorCode.ERR_UPLOAD_FORBIDDEN || errorCode == AsleepErrorCode.ERR_UPLOAD_NOT_FOUND) {
+                moveToHomeScreen()
+                stopSleepTracking()
+            }
         }
         sharedViewModel.sequenceLiveData.observe(viewLifecycleOwner) { seq ->
             var text = String.format(resources.getString(R.string.tracking_sequence))

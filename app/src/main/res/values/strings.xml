@@ -5,7 +5,10 @@
     <string name="get_report_again">Get Report Again</string>
     <string name="delete_report">Delete Report</string>
     <string name="delete_user">Delete User</string>
-    <string name="error">Error!</string>
+
+    <string name="notice_error">Error!</string>
+    <string name="notice_tracking_terminated">Tracking Terminated</string>
+    <string name="notice_no_report">No Report</string>
 
     <string name="report_no_session_id">No Session ID</string>
     <string name="report_time_range">Time Range</string>

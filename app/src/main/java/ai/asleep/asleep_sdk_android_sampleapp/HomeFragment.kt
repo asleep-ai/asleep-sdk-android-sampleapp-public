@@ -41,8 +41,16 @@ class HomeFragment : Fragment() {
         val fragmentManager = requireActivity().supportFragmentManager
         val transaction = fragmentManager.beginTransaction()
 
+        sharedViewModel.errorCodeLiveData.observe(viewLifecycleOwner) { errorCode ->
+            displayReport(false)
+            val noticeText = resources.getString(R.string.notice_tracking_terminated)
+            val errorText = getErrorText(errorCode)
+            binding.tvNotice.text = noticeText
+            binding.tvSubNotice.text = errorText
+        }
         sharedViewModel.reportLiveData.observe(viewLifecycleOwner) { report ->
             if (report != null) {
+                displayReport(true)
                 val reportText =
                         "${getString(R.string.report_time_range)} : ${changeTimeFormat(report.session?.startTime)} ~ ${changeTimeFormat(report.session?.endTime)}\n" +
                         "${getString(R.string.report_session_state)} : ${report.session?.state}\n" +
@@ -50,20 +58,17 @@ class HomeFragment : Fragment() {
                         "Peculiarities : " +report.peculiarities
                 val statText = if (report.stat != null) getStatText(report.stat!!) else null
                 binding.apply {
-                    llHomeReport.visibility = View.VISIBLE
-                    tvNotice.visibility = View.INVISIBLE
-
                     tvSessionId.text = report.session?.id
                     tvReport.text = reportText
-                    tvStat.text = statText?: "null"
+                    tvStat.text = statText?: "is null"
                     tvSleepStages.text = report.session?.sleepStages.toString()
                     tvBreathStages.text = report.session?.breathStages.toString()
                 }
-            } else {
-                binding.apply {
-                    llHomeReport.visibility = View.INVISIBLE
-                    tvNotice.visibility = View.VISIBLE
-                }
+            }
+            else {
+                displayReport(false)
+                binding.tvNotice.text = resources.getString(R.string.notice_no_report)
+                binding.tvSubNotice.text = ""
             }
         }
 
@@ -111,6 +116,25 @@ class HomeFragment : Fragment() {
 //                }
 //            }
         }
+    }
+
+    private fun displayReport(displayable: Boolean) {
+        when(displayable) {
+            true -> {
+                binding.llHomeReport.visibility = View.VISIBLE
+                binding.tvNotice.visibility = View.INVISIBLE
+                binding.tvSubNotice.visibility = View.INVISIBLE
+            }
+            false -> {
+                binding.llHomeReport.visibility = View.INVISIBLE
+                binding.tvNotice.visibility = View.VISIBLE
+                binding.tvSubNotice.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    private fun getErrorText(errorCode: Int): String {
+        return errorCode.toString() + ": " + sharedViewModel.errorDetail
     }
 
     private fun getStatText(stat: Stat): String {
