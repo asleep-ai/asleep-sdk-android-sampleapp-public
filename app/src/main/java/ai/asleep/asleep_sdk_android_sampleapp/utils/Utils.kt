@@ -1,4 +1,4 @@
-package ai.asleep.asleep_sdk_android_sampleapp
+package ai.asleep.asleep_sdk_android_sampleapp.utils
 
 import java.time.OffsetDateTime
 import java.time.ZoneId

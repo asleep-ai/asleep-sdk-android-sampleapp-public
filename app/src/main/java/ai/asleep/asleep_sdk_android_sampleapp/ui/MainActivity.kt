@@ -1,5 +1,10 @@
-package ai.asleep.asleep_sdk_android_sampleapp
+package ai.asleep.asleep_sdk_android_sampleapp.ui
 
+import ai.asleep.asleep_sdk_android_sampleapp.BuildConfig
+import ai.asleep.asleep_sdk_android_sampleapp.HomeFragment
+import ai.asleep.asleep_sdk_android_sampleapp.R
+import ai.asleep.asleep_sdk_android_sampleapp.service.RecordService
+import ai.asleep.asleep_sdk_android_sampleapp.SampleApplication
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.ActivityMainBinding
 import ai.asleep.asleepsdk.Asleep
 import ai.asleep.asleepsdk.data.AsleepConfig

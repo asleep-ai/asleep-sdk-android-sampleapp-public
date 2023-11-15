@@ -6,19 +6,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingHorizontal="16dp"
-    android:paddingTop="16dp"
-    tools:context=".HomeFragment">
+    android:paddingTop="16dp">
 
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
+        android:text="@string/app_title"
         android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_developer_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Developer mode "
+        app:layout_constraintTop_toTopOf="@id/tv_title"
+        app:layout_constraintBottom_toBottomOf="@id/tv_title"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <TextView
         android:id="@+id/tv_id"

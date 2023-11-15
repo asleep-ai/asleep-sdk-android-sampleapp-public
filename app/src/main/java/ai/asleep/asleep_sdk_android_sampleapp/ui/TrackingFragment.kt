@@ -1,5 +1,8 @@
-package ai.asleep.asleep_sdk_android_sampleapp
+package ai.asleep.asleep_sdk_android_sampleapp.ui
 
+import ai.asleep.asleep_sdk_android_sampleapp.HomeFragment
+import ai.asleep.asleep_sdk_android_sampleapp.R
+import ai.asleep.asleep_sdk_android_sampleapp.service.RecordService
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentTrackingBinding
 import ai.asleep.asleepsdk.AsleepErrorCode
 import android.content.Intent
@@ -9,7 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -17,7 +20,7 @@ class TrackingFragment : Fragment() {
 
     private var _binding: FragmentTrackingBinding? = null
     private val binding get() = _binding!!
-    private val sharedViewModel: MainViewModel by viewModels()
+    private val sharedViewModel: MainViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,12 +49,24 @@ class TrackingFragment : Fragment() {
         }
         sharedViewModel.sequenceLiveData.observe(viewLifecycleOwner) { seq ->
             var text = String.format(resources.getString(R.string.tracking_sequence))
-            if (seq == null) {
-                text += "-" + " (0.0 min.)"
+            text += if (seq == null) {
+                "-" + " (0.0 min.)"
             } else {
-                text += "$seq ${String.format(resources.getString(R.string.tracking_minute_elapsed), (seq + 1) *0.5)}"
+                if (sharedViewModel.isDeveloperModeOn) {
+                    "$seq ${String.format(resources.getString(R.string.tracking_minute_elapsed), (seq + 1) * 0.5 * 10)}"
+                } else {
+                    "$seq ${String.format(resources.getString(R.string.tracking_minute_elapsed), (seq + 1) * 0.5)}"
+                }
             }
             binding.tvSequence.text = text
+        }
+
+        sharedViewModel.arrayList.observe(viewLifecycleOwner) { list ->
+            val last: String? = if (list.isNotEmpty()) list.last() else null
+            val secondLast: String? = if (list.size >= 2) list[list.size - 2] else null
+
+            if (secondLast != null) { binding.tvErr1.text = secondLast }
+            if (last != null) { binding.tvErr2.text = last }
         }
 
         binding.btnTrackingStop.setOnClickListener {
@@ -62,8 +77,23 @@ class TrackingFragment : Fragment() {
         val startTimeText = "${String.format(resources.getString(R.string.tracking_start_time))} : ${sharedViewModel.startTrackingTime}"
         binding.tvStartTime.text = startTimeText
 
-        val idText = "user Id: " + sharedViewModel.userId
+        val idText = if (sharedViewModel.isDeveloperModeOn) {
+            "user Id: " + sharedViewModel.developerModeUserId
+        } else {
+            "user Id: " + sharedViewModel.userId
+        }
         binding.tvId.text = idText
+
+        binding.switchDeveloperMode.apply {
+            isChecked = sharedViewModel.isDeveloperModeOn
+            isClickable = false
+        }
+
+        binding.tvGuide.text = if (sharedViewModel.isDeveloperModeOn) {
+            String.format(resources.getString(R.string.developer_mode_tracking_guidance_message))
+        } else {
+            String.format(resources.getString(R.string.tracking_guidance_message))
+        }
     }
 
     private fun moveToHomeScreen() {

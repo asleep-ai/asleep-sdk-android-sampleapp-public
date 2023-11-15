@@ -1,5 +1,8 @@
-package ai.asleep.asleep_sdk_android_sampleapp
+package ai.asleep.asleep_sdk_android_sampleapp.service
 
+import ai.asleep.asleep_sdk_android_sampleapp.R
+import ai.asleep.asleep_sdk_android_sampleapp.ui.MainActivity
+import ai.asleep.asleep_sdk_android_sampleapp.ui.MainViewModel
 import ai.asleep.asleepsdk.Asleep
 import ai.asleep.asleepsdk.tracking.SleepTrackingManager
 import android.app.ActivityManager
@@ -97,7 +100,11 @@ class RecordService : Service() {
     }
 
     private fun createSleepTrackingManager() {
-        val asleepConfig = viewModel.asleepConfig
+        val asleepConfig = if (viewModel.isDeveloperModeOn) {
+            viewModel.developerModeAsleepConfig
+        } else {
+            viewModel.asleepConfig
+        }
 
         sleepTrackingManager = Asleep.createSleepTrackingManager(asleepConfig, object : SleepTrackingManager.TrackingListener {
             override fun onCreate() {

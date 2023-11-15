@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Asleep SDK Sample App</string>
+    <string name="app_title">Asleep SDK</string>
 
     <string name="ignore_battery_optimization">Ignore Battery Opt</string>
     <string name="get_report_again">Get Report Again</string>
@@ -24,6 +25,7 @@
     <string name="tracking_sequence">Uploaded Sequence :\t</string>
     <string name="tracking_minute_elapsed">(%1$.1f min.)</string>
     <string name="tracking_guidance_message">Upload every 30 seconds.\n\n To obtain the valid report,\n you must upload 40 or more times.</string>
+    <string name="developer_mode_tracking_guidance_message">Upload every 30 seconds.\n\n You will get 8 hours of plausible sleep report \n regardless of measurement time.</string>
 
     <string name="reports_title">Results by date</string>
     <string name="asleep_logo">Asleep Logo</string>

@@ -1,6 +1,11 @@
 package ai.asleep.asleep_sdk_android_sampleapp
 
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentHomeBinding
+import ai.asleep.asleep_sdk_android_sampleapp.ui.MainViewModel
+import ai.asleep.asleep_sdk_android_sampleapp.ui.TrackingFragment
+import ai.asleep.asleep_sdk_android_sampleapp.utils.changeTimeFormat
+import ai.asleep.asleepsdk.Asleep
+import ai.asleep.asleepsdk.data.AsleepConfig
 import ai.asleep.asleepsdk.data.Stat
 import android.annotation.SuppressLint
 import android.content.Context
@@ -11,13 +16,14 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -25,7 +31,7 @@ class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private val sharedViewModel: MainViewModel by viewModels()
+    private val sharedViewModel: MainViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,10 +60,12 @@ class HomeFragment : Fragment() {
             if (report != null) {
                 displayReport(true)
                 val reportText =
-                        "${getString(R.string.report_time_range)} : ${changeTimeFormat(report.session?.startTime)} ~ ${changeTimeFormat(report.session?.endTime)}\n" +
-                        "${getString(R.string.report_session_state)} : ${report.session?.state}\n" +
-                        "Missing Data Ratio : " +report.missingDataRatio + "\n" +
-                        "Peculiarities : " +report.peculiarities
+                    "Created Timezone : ${report.session?.createdTimezone}\n" +
+                            "${getString(R.string.report_time_range)} : ${changeTimeFormat(report.session?.startTime)} ~ ${changeTimeFormat(report.session?.endTime)}\n" +
+                            "Unexpected Timezone : ${report.session?.unexpectedEndTime}\n" +
+                            "${getString(R.string.report_session_state)} : ${report.session?.state}\n" +
+                            "Missing Data Ratio : " +report.missingDataRatio + "\n" +
+                            "Peculiarities : " +report.peculiarities
                 val statText = if (report.stat != null) getStatText(report.stat!!) else null
                 binding.apply {
                     tvSessionId.text = report.session?.id
@@ -82,8 +90,13 @@ class HomeFragment : Fragment() {
                     sharedViewModel.setErrorData(null, null)
                     sharedViewModel.setReport(null)
                     sharedViewModel.sessionIdLiveData.value = ""
-                    transaction.replace(R.id.fragment_container_view, TrackingFragment())
-                    transaction.commit()
+
+                    if (sharedViewModel.isDeveloperModeOn) {
+                        mockInitAsleepConfig()
+                    } else {
+                        transaction.replace(R.id.fragment_container_view, TrackingFragment())
+                        transaction.commit()
+                    }
                 } else {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.POST_NOTIFICATIONS), 0)
@@ -94,8 +107,24 @@ class HomeFragment : Fragment() {
             }
             btnRefreshReport.setOnClickListener { refreshReport() }
             btnIgnoreBatteryOpt.setOnClickListener { ignoreBatteryOptimizations() }
-            val idText = "user Id: " + sharedViewModel.userId
+            val idText = if (sharedViewModel.isDeveloperModeOn) {
+                "user Id: " + sharedViewModel.developerModeUserId
+            } else {
+                "user Id: " + sharedViewModel.userId
+            }
             tvId.text = idText
+
+            switchDeveloperMode.isChecked = sharedViewModel.isDeveloperModeOn
+            switchDeveloperMode.setOnCheckedChangeListener { buttonView, isChecked ->
+                Asleep.DeveloperMode.isOn = isChecked
+                sharedViewModel.setIsDeveloperModeOn(isChecked)
+                val text = if (isChecked) {
+                    "user Id: " + sharedViewModel.developerModeUserId
+                } else {
+                    "user Id: " + sharedViewModel.userId
+                }
+                tvId.text = text
+            }
         }
     }
 
@@ -141,7 +170,15 @@ class HomeFragment : Fragment() {
                 "StableBreathRatio: " + stat.stableBreathRatio + "\n" +
                 "UnstableBreathRatio: " + stat.unstableBreathRatio + "\n" +
                 "BreathingPattern: " + stat.breathingPattern + "\n" +
-                "BreathingIndex: " + stat.breathingIndex
+                "BreathingIndex: " + stat.breathingIndex + "\n" +
+                "SleepCycle: " + stat.sleepCycle + "\n" +
+                "SleepCycleCount: " + stat.sleepCycleCount + "\n" +
+                "WasoCount: " + stat.wasoCount + "\n" +
+                "LongestWaso: " + stat.longestWaso + "\n" +
+                "UnstableBreathCount: " + stat.unstableBreathCount + "\n" +
+                "LightLatency: " + stat.lightLatency + "\n" +
+                "RemLatency: " + stat.remLatency + "\n" +
+                "DeepLatency: " + stat.deepLatency
     }
 
     private fun refreshReport() {
@@ -169,6 +206,30 @@ class HomeFragment : Fragment() {
             intent.data = Uri.parse("package:${context.packageName}")
             startActivity(intent)
         }
+    }
+
+    private fun mockInitAsleepConfig() {
+        Asleep.initAsleepConfig(
+            context = requireContext(),
+            apiKey = BuildConfig.ASLEEP_API_KEY,
+            userId = null,
+            baseUrl = null,
+            callbackUrl = null,
+            service = "SampleAppDeveloperMode",
+            object : Asleep.AsleepConfigListener {
+                override fun onSuccess(userId: String?, asleepConfig: AsleepConfig?) {
+                    sharedViewModel.setDeveloperModeUserId(userId)
+                    sharedViewModel.setDeveloperModeAsleepConfig(asleepConfig)
+                    val fragmentManager = requireActivity().supportFragmentManager
+                    val transaction = fragmentManager.beginTransaction()
+                    transaction.replace(R.id.fragment_container_view, TrackingFragment())
+                    transaction.commit()
+                    Log.d(">>>> AsleepConfigListener", "onSuccess: Developer Id - $userId")
+                }
+                override fun onFail(errorCode: Int, detail: String) {
+                    Log.d(">>>> AsleepConfigListener", "onFail: DeveloperId $errorCode - $detail")
+                }
+            })
     }
 
     override fun onDestroyView() {
