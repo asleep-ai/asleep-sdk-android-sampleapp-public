@@ -1,6 +1,7 @@
 package ai.asleep.asleep_sdk_android_sampleapp
 
 import ai.asleep.asleepsdk.Asleep
+import ai.asleep.asleepsdk.data.AsleepConfig
 import ai.asleep.asleepsdk.data.Report
 import ai.asleep.asleepsdk.tracking.Reports
 import android.util.Log
@@ -16,18 +17,24 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor() : ViewModel() {
 
+    private var _userId: String? = null
+    val userId: String? get() = _userId
+
+    private var _asleepConfig: AsleepConfig? = null
+    val asleepConfig: AsleepConfig? get() = _asleepConfig
+
     var sessionIdLiveData =  MutableLiveData ("")
 
     private val _reportLiveData = MutableLiveData<Report?>()
     val reportLiveData: LiveData<Report?>
         get() = _reportLiveData
 
-    private val _errorCodeLiveData = MutableLiveData<Int>()
-    val errorCodeLiveData: LiveData<Int>
+    private val _errorCodeLiveData = MutableLiveData<Int?>()
+    val errorCodeLiveData: LiveData<Int?>
         get() = _errorCodeLiveData
 
-    private var _errorDetail: String = ""
-    val errorDetail: String
+    private var _errorDetail: String? = null
+    val errorDetail: String?
         get() = _errorDetail
 
     private var _startTrackingTime: String = ""
@@ -38,9 +45,12 @@ class MainViewModel @Inject constructor() : ViewModel() {
     val sequenceLiveData: LiveData<Int?>
         get() = _sequenceLiveData
 
+    fun setUserId(userId: String?) { _userId = userId }
+
+    fun setAsleepConfig(asleepConfig: AsleepConfig?) { _asleepConfig = asleepConfig }
+
     fun getReport() {
-        val asleepConfig = SampleApplication.asleepConfig
-        val reports = Asleep.createReports(asleepConfig)
+        val reports = Asleep.createReports(_asleepConfig)
         reports?.getReport(sessionIdLiveData.value!!, object : Reports.ReportListener {
             override fun onSuccess(report: Report?) {
                 Log.d(">>>>> getReport", "onSuccess: $report")
@@ -55,7 +65,11 @@ class MainViewModel @Inject constructor() : ViewModel() {
         })
     }
 
-    fun setErrorData(errorCode: Int, errorDetail: String) {
+    fun setReport(report: Report?) {
+        _reportLiveData.value = report
+    }
+
+    fun setErrorData(errorCode: Int?, errorDetail: String?) {
         _errorDetail = errorDetail
         _errorCodeLiveData.postValue(errorCode)
     }

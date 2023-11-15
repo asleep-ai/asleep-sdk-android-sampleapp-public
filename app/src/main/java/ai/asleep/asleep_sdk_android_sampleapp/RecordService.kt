@@ -97,7 +97,7 @@ class RecordService : Service() {
     }
 
     private fun createSleepTrackingManager() {
-        val asleepConfig = SampleApplication.asleepConfig
+        val asleepConfig = viewModel.asleepConfig
 
         sleepTrackingManager = Asleep.createSleepTrackingManager(asleepConfig, object : SleepTrackingManager.TrackingListener {
             override fun onCreate() {

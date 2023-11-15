@@ -42,11 +42,13 @@ class HomeFragment : Fragment() {
         val transaction = fragmentManager.beginTransaction()
 
         sharedViewModel.errorCodeLiveData.observe(viewLifecycleOwner) { errorCode ->
-            displayReport(false)
-            val noticeText = resources.getString(R.string.notice_tracking_terminated)
-            val errorText = getErrorText(errorCode)
-            binding.tvNotice.text = noticeText
-            binding.tvSubNotice.text = errorText
+            if (errorCode != null) {
+                displayReport(false)
+                val noticeText = resources.getString(R.string.notice_tracking_terminated)
+                val errorText = getErrorText(errorCode)
+                binding.tvNotice.text = noticeText
+                binding.tvSubNotice.text = errorText
+            }
         }
         sharedViewModel.reportLiveData.observe(viewLifecycleOwner) { report ->
             if (report != null) {
@@ -65,7 +67,7 @@ class HomeFragment : Fragment() {
                     tvBreathStages.text = report.session?.breathStages.toString()
                 }
             }
-            else {
+            else if(sharedViewModel.errorCodeLiveData.value == null) {
                 displayReport(false)
                 binding.tvNotice.text = resources.getString(R.string.notice_no_report)
                 binding.tvSubNotice.text = ""
@@ -77,6 +79,9 @@ class HomeFragment : Fragment() {
                 if (ActivityCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
                     && ActivityCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                     sharedViewModel.setStartTrackingTime()
+                    sharedViewModel.setErrorData(null, null)
+                    sharedViewModel.setReport(null)
+                    sharedViewModel.sessionIdLiveData.value = ""
                     transaction.replace(R.id.fragment_container_view, TrackingFragment())
                     transaction.commit()
                 } else {
@@ -89,32 +94,8 @@ class HomeFragment : Fragment() {
             }
             btnRefreshReport.setOnClickListener { refreshReport() }
             btnIgnoreBatteryOpt.setOnClickListener { ignoreBatteryOptimizations() }
-            val idText = "user Id: " + SampleApplication.userId
+            val idText = "user Id: " + sharedViewModel.userId
             tvId.text = idText
-
-//            btnReports.setOnClickListener {
-//                transaction.replace(R.id.fragment_container_view, ReportsFragment())
-//                transaction.commit()
-//            }
-//            btnDeleteReport.setOnClickListener {
-//                val sessionId: String = sharedViewModel.sessionIdLiveData.value ?: ""
-//                if (sessionId == "") {
-//                    Toast.makeText(requireActivity(), "Delete error: No session ID!", Toast.LENGTH_SHORT).show()
-//                } else {
-//                    if (SampleApplication.userId == null) {
-//                        Toast.makeText(requireActivity(), "Report can't be deleted without an user ID", Toast.LENGTH_SHORT).show()
-//                    } else {
-//                        deleteReport(sessionId)
-//                    }
-//                }
-//            }
-//            btnDeleteUser.setOnClickListener {
-//                if (SampleApplication.userId == null) {
-//                    Toast.makeText(requireActivity(), "Delete error: No user ID!", Toast.LENGTH_SHORT).show()
-//                } else {
-//                    deleteUser()
-//                }
-//            }
         }
     }
 
@@ -133,7 +114,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun getErrorText(errorCode: Int): String {
+    private fun getErrorText(errorCode: Int?): String {
         return errorCode.toString() + ": " + sharedViewModel.errorDetail
     }
 
@@ -168,7 +149,7 @@ class HomeFragment : Fragment() {
         if (sessionId == "") {
             Toast.makeText(requireActivity(), "Refresh error: No session ID!", Toast.LENGTH_SHORT).show()
         } else {
-            if(SampleApplication.userId == null) {
+            if(sharedViewModel.userId == null) {
                 Toast.makeText(requireActivity(), "Report can't get Report without an user ID.", Toast.LENGTH_SHORT).show()
             } else {
                 sharedViewModel.getReport()
@@ -189,47 +170,6 @@ class HomeFragment : Fragment() {
             startActivity(intent)
         }
     }
-
-//    private fun deleteReport(sessionId: String) {
-//        val reports = Asleep.createReports(SampleApplication.asleepConfig)
-//        reports?.deleteReport(sessionId, object : Reports.DeleteReportListener {
-//            override fun onSuccess(sessionId: String?) {
-//                Log.d(">>>>> deleteReport", "onSuccess!")
-//                activity?.runOnUiThread {
-//                    binding.tvReport.text = getString(R.string.report_no_session_id)
-//                }
-//                sharedViewModel.setSessionId("")
-//            }
-//
-//            override fun onFail(errorCode: Int, detail: String) {
-//                Log.d(">>>>> deleteReport", "onFail: ")
-//            }
-//        })
-//    }
-
-//    private fun deleteUser() {
-//        Asleep.deleteUser(object : Asleep.DeleteUserIdListener {
-//            override fun onSuccess(userId: String?) {
-//                if (SampleApplication.userId == userId) {
-//                    Log.d(">>>>> deleteUser", "onSuccess!")
-//                    with (SampleApplication.sharedPref.edit()) {
-//                        putString("user_id", null)
-//                        apply()
-//                    }
-//                    SampleApplication.setUserId(null)
-//
-//                    val text = "user Id: " + SampleApplication.userId + " (please close and restart the app)"
-//                    activity?.runOnUiThread {
-//                        binding.tvId.text = text
-//                    }
-//                }
-//            }
-//
-//            override fun onFail(errorCode: Int, detail: String) {
-//                Log.d(">>>>> deleteUser", "onFail: ")
-//            }
-//        })
-//    }
 
     override fun onDestroyView() {
         super.onDestroyView()

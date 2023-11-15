@@ -36,10 +36,12 @@ class TrackingFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         sharedViewModel.errorCodeLiveData.observe(viewLifecycleOwner) { errorCode ->
-            Toast.makeText(requireActivity(), ">>>>>> Error : $errorCode", Toast.LENGTH_SHORT).show()
-            if (errorCode == AsleepErrorCode.ERR_UPLOAD_FORBIDDEN || errorCode == AsleepErrorCode.ERR_UPLOAD_NOT_FOUND) {
-                moveToHomeScreen()
-                stopSleepTracking()
+            if (errorCode != null) {
+                Toast.makeText(requireActivity(), ">>>>>> Error : $errorCode", Toast.LENGTH_SHORT).show()
+                if (errorCode == AsleepErrorCode.ERR_UPLOAD_FORBIDDEN || errorCode == AsleepErrorCode.ERR_UPLOAD_NOT_FOUND) {
+                    moveToHomeScreen()
+                    stopSleepTracking()
+                }
             }
         }
         sharedViewModel.sequenceLiveData.observe(viewLifecycleOwner) { seq ->
@@ -60,7 +62,7 @@ class TrackingFragment : Fragment() {
         val startTimeText = "${String.format(resources.getString(R.string.tracking_start_time))} : ${sharedViewModel.startTrackingTime}"
         binding.tvStartTime.text = startTimeText
 
-        val idText = "user Id: " + SampleApplication.userId
+        val idText = "user Id: " + sharedViewModel.userId
         binding.tvId.text = idText
     }
 

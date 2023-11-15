@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.viewModels
 import java.time.LocalDate
 
 class ReportsFragment : Fragment() {
@@ -20,6 +21,7 @@ class ReportsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var callback: OnBackPressedCallback
+    private val sharedViewModel: MainViewModel by viewModels()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -45,7 +47,7 @@ class ReportsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val reports = Asleep.createReports(SampleApplication.asleepConfig)
+        val reports = Asleep.createReports(sharedViewModel.asleepConfig)
         val today = LocalDate.now()
         reports?.getReports(today.minusDays(7).toString(), today.toString(), "DESC", 0, 20, object : Reports.ReportsListener {
             override fun onSuccess(reports: List<SleepSession>?) {
