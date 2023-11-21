@@ -16,8 +16,8 @@ android {
         applicationId "ai.asleep.asleep_sdk_android_sampleapp"
         minSdk 26
         targetSdk 33
-        versionCode 2010101
-        versionName "2.1.1-1"
+        versionCode 2020101
+        versionName "2.2.1-1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

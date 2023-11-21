@@ -109,6 +109,7 @@ class RecordService : Service() {
         sleepTrackingManager = Asleep.createSleepTrackingManager(asleepConfig, object : SleepTrackingManager.TrackingListener {
             override fun onCreate() {
                 Log.d(">>>>> sleepTrackingManager - ", "onCreate: start tracking")
+                Log.d(">>>>> RecordService", "onCreate) TrackingStatus.sessionId: ${sleepTrackingManager?.getTrackingStatus()?.sessionId}")
             }
 
             override fun onUpload(sequence: Int) {
@@ -118,6 +119,7 @@ class RecordService : Service() {
 
             override fun onClose(sessionId: String) {
                 Log.d(">>>>> sleepTrackingManager - ", "onClose: $sessionId")
+                Log.d(">>>>> RecordService", "onClose) TrackingStatus.sessionId: ${sleepTrackingManager?.getTrackingStatus()?.sessionId}")
                 viewModel.sessionIdLiveData.postValue(sessionId)
             }
 
@@ -126,6 +128,8 @@ class RecordService : Service() {
                 viewModel.setErrorData(errorCode, detail)
             }
         })
+
+        Log.d(">>>>> RecordService", "before create) TrackingStatus.sessionId: ${sleepTrackingManager?.getTrackingStatus()?.sessionId}")
     }
 
 //    private fun requestAnalysis() {
