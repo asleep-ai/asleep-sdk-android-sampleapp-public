@@ -27,12 +27,7 @@ class TrackingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentTrackingBinding.inflate(inflater, container, false)
-        val view = binding.root
-
-        val intent = Intent(requireActivity(), RecordService::class.java)
-        requireActivity().startForegroundService(intent)
-
-        return view
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -44,6 +39,10 @@ class TrackingFragment : Fragment() {
                 if (errorCode == AsleepErrorCode.ERR_UPLOAD_FORBIDDEN || errorCode == AsleepErrorCode.ERR_UPLOAD_NOT_FOUND) {
                     moveToHomeScreen()
                     stopSleepTracking()
+                }
+                else if (errorCode == AsleepErrorCode.ERR_AUDIO) {
+                    moveToHomeScreen()
+                    stopServiceOnAudioError()
                 }
             }
         }
@@ -105,7 +104,14 @@ class TrackingFragment : Fragment() {
 
     private fun stopSleepTracking() {
         val intent = Intent(requireActivity(), RecordService::class.java)
-        requireActivity().stopService(intent)
+        intent.action = RecordService.ACTION_STOP_SERVICE
+        requireActivity().startService(intent)
+    }
+
+    private fun stopServiceOnAudioError() {
+        val intent = Intent(requireActivity(), RecordService::class.java)
+        intent.action = RecordService.ACTION_ERR_AUDIO
+        requireActivity().startService(intent)
     }
 
     override fun onDestroyView() {

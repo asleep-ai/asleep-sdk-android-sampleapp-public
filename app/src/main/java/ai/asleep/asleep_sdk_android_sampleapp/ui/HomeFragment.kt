@@ -1,6 +1,7 @@
 package ai.asleep.asleep_sdk_android_sampleapp
 
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentHomeBinding
+import ai.asleep.asleep_sdk_android_sampleapp.service.RecordService
 import ai.asleep.asleep_sdk_android_sampleapp.ui.MainViewModel
 import ai.asleep.asleep_sdk_android_sampleapp.ui.TrackingFragment
 import ai.asleep.asleep_sdk_android_sampleapp.utils.changeTimeFormat
@@ -43,9 +44,6 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val fragmentManager = requireActivity().supportFragmentManager
-        val transaction = fragmentManager.beginTransaction()
 
         sharedViewModel.errorCodeLiveData.observe(viewLifecycleOwner) { errorCode ->
             if (errorCode != null) {
@@ -94,8 +92,8 @@ class HomeFragment : Fragment() {
                     if (sharedViewModel.isDeveloperModeOn) {
                         mockInitAsleepConfig()
                     } else {
-                        transaction.replace(R.id.fragment_container_view, TrackingFragment())
-                        transaction.commit()
+                        startTrackingService()
+                        moveToTrackingScreen()
                     }
                 } else {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -220,16 +218,27 @@ class HomeFragment : Fragment() {
                 override fun onSuccess(userId: String?, asleepConfig: AsleepConfig?) {
                     sharedViewModel.setDeveloperModeUserId(userId)
                     sharedViewModel.setDeveloperModeAsleepConfig(asleepConfig)
-                    val fragmentManager = requireActivity().supportFragmentManager
-                    val transaction = fragmentManager.beginTransaction()
-                    transaction.replace(R.id.fragment_container_view, TrackingFragment())
-                    transaction.commit()
+                    startTrackingService()
+                    moveToTrackingScreen()
                     Log.d(">>>> AsleepConfigListener", "onSuccess: Developer Id - $userId")
                 }
                 override fun onFail(errorCode: Int, detail: String) {
                     Log.d(">>>> AsleepConfigListener", "onFail: DeveloperId $errorCode - $detail")
                 }
             })
+    }
+
+    private fun startTrackingService() {
+        val intent = Intent(requireActivity(), RecordService::class.java)
+        intent.action = RecordService.ACTION_START_OR_RESUME_SERVICE
+        requireActivity().startForegroundService(intent)
+    }
+
+    private fun moveToTrackingScreen() {
+        val fragmentManager = requireActivity().supportFragmentManager
+        val transaction = fragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_container_view, TrackingFragment())
+        transaction.commit()
     }
 
     override fun onDestroyView() {

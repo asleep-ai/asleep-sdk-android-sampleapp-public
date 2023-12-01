@@ -13,6 +13,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -32,6 +33,10 @@ class RecordService : Service() {
     companion object {
         private const val FOREGROUND_SERVICE_ID = 1000
         private const val RECORD_NOTIFICATION_CHANNEL_ID = "12344321"
+
+        const val ACTION_START_OR_RESUME_SERVICE = "ACTION_START_OR_RESUME_SERVICE"
+        const val ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE"
+        const val ACTION_ERR_AUDIO = "ACTION_ERR_AUDIO"
 
         fun isRecordServiceRunning(context: Context): Boolean {
             val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -56,12 +61,17 @@ class RecordService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        if (intent?.action == ACTION_STOP_SERVICE) {
+            sleepTrackingManager?.stopSleepTracking()
+            stopSelf()
+        }
+        if (intent?.action == ACTION_ERR_AUDIO) {
+            if (sleepTrackingManager?.getTrackingStatus()?.sessionId != null) {
+                sleepTrackingManager?.stopSleepTracking()
+            }
+            stopSelf()
+        }
         return START_STICKY
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        sleepTrackingManager?.stopSleepTracking()
     }
 
     private fun createNotificationChannel() {
@@ -94,7 +104,12 @@ class RecordService : Service() {
             .setSmallIcon(R.mipmap.ic_sampleapp)
             .setContentIntent(pendingIntent)
             .build()
-        startForeground(FOREGROUND_SERVICE_ID, notification)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            startForeground(FOREGROUND_SERVICE_ID, notification, FOREGROUND_SERVICE_TYPE_MICROPHONE)
+        } else {
+            startForeground(FOREGROUND_SERVICE_ID, notification)
+        }
 
         Log.d(">>>>> ", "startForeground()")
     }
