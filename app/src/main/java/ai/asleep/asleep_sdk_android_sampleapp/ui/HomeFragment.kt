@@ -18,12 +18,12 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -176,7 +176,8 @@ class HomeFragment : Fragment() {
                 "UnstableBreathCount: " + stat.unstableBreathCount + "\n" +
                 "LightLatency: " + stat.lightLatency + "\n" +
                 "RemLatency: " + stat.remLatency + "\n" +
-                "DeepLatency: " + stat.deepLatency
+                "DeepLatency: " + stat.deepLatency + "\n" +
+                "SleepIndex: " + stat.sleepIndex
     }
 
     private fun refreshReport() {
@@ -231,7 +232,11 @@ class HomeFragment : Fragment() {
     private fun startTrackingService() {
         val intent = Intent(requireActivity(), RecordService::class.java)
         intent.action = RecordService.ACTION_START_OR_RESUME_SERVICE
-        requireActivity().startForegroundService(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            requireActivity().startForegroundService(intent)
+        } else {
+            requireActivity().startService(intent)
+        }
     }
 
     private fun moveToTrackingScreen() {

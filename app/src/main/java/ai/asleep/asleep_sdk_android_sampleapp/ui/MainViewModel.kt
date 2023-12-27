@@ -5,15 +5,20 @@ import ai.asleep.asleepsdk.AsleepErrorCode
 import ai.asleep.asleepsdk.data.AsleepConfig
 import ai.asleep.asleepsdk.data.Report
 import ai.asleep.asleepsdk.tracking.Reports
+import ai.asleep.asleepsdk.tracking.SleepTrackingManager
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,8 +27,11 @@ class MainViewModel @Inject constructor() : ViewModel() {
     private var _userId: String? = null
     val userId: String? get() = _userId
 
-    private var _asleepConfig: AsleepConfig? = null
-    val asleepConfig: AsleepConfig? get() = _asleepConfig
+    private var _asleepConfig = MutableLiveData<AsleepConfig?>()
+    val asleepConfig: LiveData<AsleepConfig?>
+        get() = _asleepConfig
+
+    var sleepTrackingManager: SleepTrackingManager? = null
 
     var sessionIdLiveData =  MutableLiveData ("")
 
@@ -69,13 +77,13 @@ class MainViewModel @Inject constructor() : ViewModel() {
 
     fun setUserId(userId: String?) { _userId = userId }
 
-    fun setAsleepConfig(asleepConfig: AsleepConfig?) { _asleepConfig = asleepConfig }
+    fun setAsleepConfig(asleepConfig: AsleepConfig?) { _asleepConfig.value = asleepConfig }
 
     fun getReport() {
         val reports = if (isDeveloperModeOn) {
             Asleep.createReports(_developerModeAsleepConfig)
         } else {
-            Asleep.createReports(_asleepConfig)
+            Asleep.createReports(_asleepConfig.value)
         }
         reports?.getReport(sessionIdLiveData.value!!, object : Reports.ReportListener {
             override fun onSuccess(report: Report?) {
@@ -128,14 +136,31 @@ class MainViewModel @Inject constructor() : ViewModel() {
     }
 
     fun setStartTrackingTime() {
-        val systemZone = ZoneId.systemDefault()
-        val zonedDateTime = ZonedDateTime.now(systemZone)
-        _startTrackingTime = zonedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val systemZone = ZoneId.systemDefault()
+            val zonedDateTime = ZonedDateTime.now(systemZone)
+            _startTrackingTime = zonedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        } else {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+            dateFormat.timeZone = TimeZone.getDefault()
+            val currentTime = Date(System.currentTimeMillis())
+            _startTrackingTime = dateFormat.format(currentTime)
+        }
     }
 
     private fun getCurrentDateTime(): String {
-        val currentDateTime = LocalDateTime.now()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
-        return currentDateTime.format(formatter)
+        var time: String
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val currentDateTime = LocalDateTime.now()
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+            time = currentDateTime.format(formatter)
+        } else {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+            dateFormat.timeZone = TimeZone.getDefault()
+            val currentTime = Date(System.currentTimeMillis())
+            time = dateFormat.format(currentTime)
+        }
+
+        return time
     }
 }

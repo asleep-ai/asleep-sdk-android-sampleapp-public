@@ -40,9 +40,9 @@ class TrackingFragment : Fragment() {
                     moveToHomeScreen()
                     stopSleepTracking()
                 }
-                else if (errorCode == AsleepErrorCode.ERR_AUDIO) {
+                else if (errorCode == AsleepErrorCode.ERR_AUDIO || errorCode in AsleepErrorCode.ERR_CREATE_FAILED..AsleepErrorCode.ERR_CREATE_SERVER_ERROR) {
                     moveToHomeScreen()
-                    stopServiceOnAudioError()
+                    stopServiceOnError()
                 }
             }
         }
@@ -108,9 +108,9 @@ class TrackingFragment : Fragment() {
         requireActivity().startService(intent)
     }
 
-    private fun stopServiceOnAudioError() {
+    private fun stopServiceOnError() {
         val intent = Intent(requireActivity(), RecordService::class.java)
-        intent.action = RecordService.ACTION_ERR_AUDIO
+        intent.action = RecordService.ACTION_ERR_EXIT
         requireActivity().startService(intent)
     }
 
