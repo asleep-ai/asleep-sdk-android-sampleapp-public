@@ -71,6 +71,7 @@ class HomeFragment : Fragment() {
                     tvStat.text = statText?: "is null"
                     tvSleepStages.text = report.session?.sleepStages.toString()
                     tvBreathStages.text = report.session?.breathStages.toString()
+                    tvSnoringStages.text = report.session?.snoringStages.toString()
                 }
             }
             else if(sharedViewModel.errorCodeLiveData.value == null) {
@@ -177,7 +178,13 @@ class HomeFragment : Fragment() {
                 "LightLatency: " + stat.lightLatency + "\n" +
                 "RemLatency: " + stat.remLatency + "\n" +
                 "DeepLatency: " + stat.deepLatency + "\n" +
-                "SleepIndex: " + stat.sleepIndex
+                "SleepIndex: " + stat.sleepIndex + "\n" +
+                "TimeInSnoring: " + stat.timeInSnoring + "\n" +
+                "TimeInNoSnoring: " + stat.timeInNoSnoring + "\n" +
+                "snoringRatio: " + stat.snoringRatio + "\n" +
+                "noSnoringRatio: " + stat.noSnoringRatio + "\n" +
+                "snoringCount: " + stat.snoringRatio + "\n" +
+                "sleepCycleTime: " + stat.sleepCycleTime + "\n"
     }
 
     private fun refreshReport() {
