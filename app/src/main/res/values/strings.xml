@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Asleep SDK Sample App</string>
+    <string name="app_title">Asleep SDK</string>
+
+    <string name="ignore_battery_optimization">Ignore Battery Opt</string>
+    <string name="get_report_again">Get Report Again</string>
+    <string name="delete_report">Delete Report</string>
+    <string name="delete_user">Delete User</string>
+
+    <string name="notice_error">Error!</string>
+    <string name="notice_tracking_terminated">Tracking Terminated</string>
+    <string name="notice_no_report">No Report</string>
+
+    <string name="report_no_session_id">No Session ID</string>
+    <string name="report_time_range">Time Range</string>
+    <string name="report_session_state">Session State</string>
+    <string name="report_stat">Stat</string>
+    <string name="report_session_sleep_stages">Sleep Stages</string>
+    <string name="report_session_breath_stages">Breath Stages</string>
+    <string name="report_session_snoring_stages">Snoring Stages</string>
+
+    <string name="tracking_sleep_title">Tracking Sleep....</string>
+    <string name="tracking_start_tracking">Start Tracking</string>
+    <string name="tracking_stop_tracking">Stop Tracking</string>
+    <string name="tracking_start_time">Start Time</string>
+    <string name="tracking_sequence">Uploaded Sequence :\t</string>
+    <string name="tracking_minute_elapsed">(%1$.1f min.)</string>
+    <string name="tracking_guidance_message">Upload every 30 seconds.\n\n To obtain the valid report,\n you must upload 40 or more times.</string>
+    <string name="developer_mode_tracking_guidance_message">Upload every 30 seconds.\n\n You will get 8 hours of plausible sleep report \n regardless of measurement time.</string>
+
+    <string name="reports_title">Results by date</string>
+    <string name="asleep_logo">Asleep Logo</string>
+
+</resources>

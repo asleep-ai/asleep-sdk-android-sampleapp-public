@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingHorizontal="16dp"
+    android:paddingTop="16dp">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_title"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <LinearLayout
+        android:id="@+id/ll_user_id"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_title"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="user id :"/>
+
+        <TextView
+            android:id="@+id/tv_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"
+            android:layout_marginStart="8dp"
+            tools:text="G-"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_notice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/report_no_session_id"
+        android:textSize="24sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ll_user_id"
+        app:layout_constraintBottom_toTopOf="@id/ll_home_btn"/>
+
+    <TextView
+        android:id="@+id/tv_sub_notice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_notice"/>
+
+    <ScrollView
+        android:id="@+id/sv_report"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginVertical="16dp"
+        android:background="@drawable/border_rectangle_black"
+        app:layout_constraintTop_toBottomOf="@id/ll_user_id"
+        app:layout_constraintBottom_toTopOf="@id/ll_home_btn">
+
+        <LinearLayout
+            android:id="@+id/ll_home_report"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="invisible"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/tv_session_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="session_id"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:id="@+id/tv_report"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="1\n2\n3\n4\n5\n6\n7\n8\n9"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/report_stat"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:id="@+id/tv_stat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="1\n2\n3\n4\n5\n6\n7\n8\n9"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/report_session_sleep_stages"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:id="@+id/tv_sleep_stages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="1\n2\n3"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/report_session_breath_stages"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:id="@+id/tv_breath_stages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="1\n2\n3"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/report_session_snoring_stages"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:id="@+id/tv_snoring_stages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="1\n2\n3"
+                android:textIsSelectable="true" />
+        </LinearLayout>
+
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/ll_home_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/btn_tracking_start">
+
+        <Button
+            android:id="@+id/btn_refresh_report"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/get_report_again"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            tools:ignore="ButtonStyle" />
+
+        <Button
+            android:id="@+id/btn_ignore_battery_opt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ignore_battery_optimization"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            tools:ignore="ButtonStyle" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_tracking_start"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/tracking_start_tracking"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/iv_logo"/>
+
+    <ImageView
+        android:id="@+id/iv_logo"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:src="@drawable/p_standard_logo"
+        android:contentDescription="@string/asleep_logo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+<!--        <Button-->
+<!--            android:id="@+id/btn_delete_user"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:text="@string/delete_user"/>-->
+
+<!--        <Button-->
+<!--            android:id="@+id/btn_delete_report"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/delete_report"/>-->
+
+<!--        <Button-->
+<!--            android:id="@+id/btn_reports"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/reports_title"/>-->
+
+</androidx.constraintlayout.widget.ConstraintLayout>
