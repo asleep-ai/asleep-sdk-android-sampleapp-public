@@ -11,3 +11,10 @@ A sample application that demonstrates how to utilize Asleep SDK in Android.
 
 ## Next step
 Start adopting the Asleep SDK with the [Asleep Documentation](https://docs-en.asleep.ai/docs).
+
+<br>
+
+## Prevent the app from termination due to updates
+To prevent the app from application exit due to updates (e.g. WebView, GMS), <br> you separate the Foreground Service into a distinct process.
+
+If you want to apply this, please refer to the following link: [Link](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/fgs-process)
