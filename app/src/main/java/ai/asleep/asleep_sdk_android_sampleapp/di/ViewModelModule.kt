@@ -1,6 +1,7 @@
 package ai.asleep.asleep_sdk_android_sampleapp.di
 
-import ai.asleep.asleep_sdk_android_sampleapp.ui.MainViewModel
+import ai.asleep.asleep_sdk_android_sampleapp.ui.AsleepViewModel
+import android.app.Application
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,10 +14,9 @@ object ViewModelModule {
 
     @Provides
     @Singleton
-    fun provideMainViewModel(
-    ): MainViewModel {
-        return MainViewModel()
+    fun provideAsleepViewModel(
+        applicationContext: Application
+    ): AsleepViewModel {
+        return AsleepViewModel(applicationContext)
     }
-
-
 }

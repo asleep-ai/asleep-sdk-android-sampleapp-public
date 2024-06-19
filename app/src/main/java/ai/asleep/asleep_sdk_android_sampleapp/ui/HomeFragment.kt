@@ -1,12 +1,12 @@
-package ai.asleep.asleep_sdk_android_sampleapp
+package ai.asleep.asleep_sdk_android_sampleapp.ui
 
+import ai.asleep.asleep_sdk_android_sampleapp.R
+import ai.asleep.asleep_sdk_android_sampleapp.SampleApplication
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentHomeBinding
 import ai.asleep.asleep_sdk_android_sampleapp.service.RecordService
-import ai.asleep.asleep_sdk_android_sampleapp.ui.MainViewModel
-import ai.asleep.asleep_sdk_android_sampleapp.ui.TrackingFragment
 import ai.asleep.asleep_sdk_android_sampleapp.utils.changeTimeFormat
-import ai.asleep.asleepsdk.Asleep
-import ai.asleep.asleepsdk.data.AsleepConfig
+import ai.asleep.asleep_sdk_android_sampleapp.utils.getCurrentTime
+import ai.asleep.asleepsdk.data.Report
 import ai.asleep.asleepsdk.data.Stat
 import android.annotation.SuppressLint
 import android.content.Context
@@ -17,7 +17,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,7 +31,7 @@ class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private val sharedViewModel: MainViewModel by activityViewModels()
+    private val asleepViewModel: AsleepViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,39 +44,16 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sharedViewModel.errorCodeLiveData.observe(viewLifecycleOwner) { errorCode ->
-            if (errorCode != null) {
-                displayReport(false)
-                val noticeText = resources.getString(R.string.notice_tracking_terminated)
-                val errorText = getErrorText(errorCode)
-                binding.tvNotice.text = noticeText
-                binding.tvSubNotice.text = errorText
-            }
-        }
-        sharedViewModel.reportLiveData.observe(viewLifecycleOwner) { report ->
+        // Display the user id (observe user id)
+        asleepViewModel.userId.observe(viewLifecycleOwner) { binding.tvId.text = it }
+
+        // If getReport() is successful, display the Report (observe Report)
+        asleepViewModel.report.observe(viewLifecycleOwner) { report ->
             if (report != null) {
                 displayReport(true)
-                val reportText =
-                    "Created Timezone : ${report.session?.createdTimezone}\n" +
-                            "${getString(R.string.report_time_range)} : ${changeTimeFormat(report.session?.startTime)} ~ ${changeTimeFormat(report.session?.endTime)}\n" +
-                            "Unexpected Timezone : ${report.session?.unexpectedEndTime}\n" +
-                            "${getString(R.string.report_session_state)} : ${report.session?.state}\n" +
-                            "Missing Data Ratio : " +report.missingDataRatio + "\n" +
-                            "Peculiarities : " +report.peculiarities
-                val statText = if (report.stat != null) getStatText(report.stat!!) else null
-                binding.apply {
-                    tvSessionId.text = report.session?.id
-                    tvReport.text = reportText
-                    tvStat.text = statText?: "is null"
-                    tvSleepStages.text = report.session?.sleepStages.toString()
-                    tvBreathStages.text = report.session?.breathStages.toString()
-                    tvSnoringStages.text = report.session?.snoringStages.toString()
-                }
-            }
-            else if(sharedViewModel.errorCodeLiveData.value == null) {
+                displayReportText(report)
+            } else {
                 displayReport(false)
-                binding.tvNotice.text = resources.getString(R.string.notice_no_report)
-                binding.tvSubNotice.text = ""
             }
         }
 
@@ -85,17 +61,17 @@ class HomeFragment : Fragment() {
             btnTrackingStart.setOnClickListener {
                 if (ActivityCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
                     && ActivityCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                    sharedViewModel.setStartTrackingTime()
-                    sharedViewModel.setErrorData(null, null)
-                    sharedViewModel.setReport(null)
-                    sharedViewModel.sessionIdLiveData.value = ""
+                    asleepViewModel.clearSleepTrackingState()
 
-                    if (sharedViewModel.isDeveloperModeOn) {
-                        mockInitAsleepConfig()
-                    } else {
-                        startTrackingService()
-                        moveToTrackingScreen()
+                    // [Optional] store the start tracking time
+                    with(SampleApplication.sharedPref.edit()) {
+                        putString("start_tracking_time", getCurrentTime())
+                        apply()
                     }
+
+                    // start sleep tracking
+                    startTrackingService()
+                    moveToTrackingScreen()
                 } else {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.POST_NOTIFICATIONS), 0)
@@ -106,24 +82,6 @@ class HomeFragment : Fragment() {
             }
             btnRefreshReport.setOnClickListener { refreshReport() }
             btnIgnoreBatteryOpt.setOnClickListener { ignoreBatteryOptimizations() }
-            val idText = if (sharedViewModel.isDeveloperModeOn) {
-                "user Id: " + sharedViewModel.developerModeUserId
-            } else {
-                "user Id: " + sharedViewModel.userId
-            }
-            tvId.text = idText
-
-            switchDeveloperMode.isChecked = sharedViewModel.isDeveloperModeOn
-            switchDeveloperMode.setOnCheckedChangeListener { buttonView, isChecked ->
-                Asleep.DeveloperMode.isOn = isChecked
-                sharedViewModel.setIsDeveloperModeOn(isChecked)
-                val text = if (isChecked) {
-                    "user Id: " + sharedViewModel.developerModeUserId
-                } else {
-                    "user Id: " + sharedViewModel.userId
-                }
-                tvId.text = text
-            }
         }
     }
 
@@ -142,8 +100,27 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun getErrorText(errorCode: Int?): String {
-        return errorCode.toString() + ": " + sharedViewModel.errorDetail
+    private fun displayReportText(report: Report) {
+        val reportText = getReportText(report)
+        val statText = if (report.stat != null) getStatText(report.stat!!) else null
+
+        binding.apply {
+            tvSessionId.text = report.session?.id
+            tvReport.text = reportText
+            tvStat.text = statText?: "is null"
+            tvSleepStages.text = report.session?.sleepStages.toString()
+            tvBreathStages.text = report.session?.breathStages.toString()
+            tvSnoringStages.text = report.session?.snoringStages.toString()
+        }
+    }
+
+    private fun getReportText(report: Report): String {
+        return  "Created Timezone : ${report.session?.createdTimezone}\n" +
+                "${getString(R.string.report_time_range)} : ${changeTimeFormat(report.session?.startTime)} ~ ${changeTimeFormat(report.session?.endTime)}\n" +
+                "Unexpected Timezone : ${report.session?.unexpectedEndTime}\n" +
+                "${getString(R.string.report_session_state)} : ${report.session?.state}\n" +
+                "Missing Data Ratio : " +report.missingDataRatio + "\n" +
+                "Peculiarities : " +report.peculiarities
     }
 
     private fun getStatText(stat: Stat): String {
@@ -187,18 +164,7 @@ class HomeFragment : Fragment() {
                 "sleepCycleTime: " + stat.sleepCycleTime + "\n"
     }
 
-    private fun refreshReport() {
-        val sessionId: String = sharedViewModel.sessionIdLiveData.value ?: ""
-        if (sessionId == "") {
-            Toast.makeText(requireActivity(), "Refresh error: No session ID!", Toast.LENGTH_SHORT).show()
-        } else {
-            if(sharedViewModel.userId == null) {
-                Toast.makeText(requireActivity(), "Report can't get Report without an user ID.", Toast.LENGTH_SHORT).show()
-            } else {
-                sharedViewModel.getReport()
-            }
-        }
-    }
+    private fun refreshReport() = asleepViewModel.getSingleReport()
 
     @SuppressLint("BatteryLife")
     private fun ignoreBatteryOptimizations() {
@@ -212,28 +178,6 @@ class HomeFragment : Fragment() {
             intent.data = Uri.parse("package:${context.packageName}")
             startActivity(intent)
         }
-    }
-
-    private fun mockInitAsleepConfig() {
-        Asleep.initAsleepConfig(
-            context = requireContext(),
-            apiKey = BuildConfig.ASLEEP_API_KEY,
-            userId = null,
-            baseUrl = null,
-            callbackUrl = null,
-            service = "SampleAppDeveloperMode",
-            object : Asleep.AsleepConfigListener {
-                override fun onSuccess(userId: String?, asleepConfig: AsleepConfig?) {
-                    sharedViewModel.setDeveloperModeUserId(userId)
-                    sharedViewModel.setDeveloperModeAsleepConfig(asleepConfig)
-                    startTrackingService()
-                    moveToTrackingScreen()
-                    Log.d(">>>> AsleepConfigListener", "onSuccess: Developer Id - $userId")
-                }
-                override fun onFail(errorCode: Int, detail: String) {
-                    Log.d(">>>> AsleepConfigListener", "onFail: DeveloperId $errorCode - $detail")
-                }
-            })
     }
 
     private fun startTrackingService() {

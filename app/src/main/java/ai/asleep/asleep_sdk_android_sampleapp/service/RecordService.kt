@@ -1,11 +1,8 @@
 package ai.asleep.asleep_sdk_android_sampleapp.service
 
-import ai.asleep.asleep_sdk_android_sampleapp.BuildConfig
 import ai.asleep.asleep_sdk_android_sampleapp.R
+import ai.asleep.asleep_sdk_android_sampleapp.ui.AsleepViewModel
 import ai.asleep.asleep_sdk_android_sampleapp.ui.MainActivity
-import ai.asleep.asleep_sdk_android_sampleapp.ui.MainViewModel
-import ai.asleep.asleepsdk.Asleep
-import ai.asleep.asleepsdk.tracking.SleepTrackingManager
 import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -16,7 +13,6 @@ import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleService
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,7 +24,7 @@ const val TAG = ">>>>> RecordService"
 class RecordService : LifecycleService() {
 
     @Inject
-    lateinit var viewModel: MainViewModel
+    lateinit var asleepViewModel: AsleepViewModel
 
     companion object {
         private const val FOREGROUND_SERVICE_ID = 1000
@@ -55,34 +51,23 @@ class RecordService : LifecycleService() {
         Log.d(TAG, "onCreate: ")
         createNotificationChannel()
         startForegroundService()
-        viewModel.setSequence(null)
 
-        viewModel.asleepConfig.observe(this) {
+        asleepViewModel.apply {
             createSleepTrackingManager()
-            viewModel.sleepTrackingManager?.startSleepTracking()
+            startSleepTracking()
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         Log.d(TAG, "onStartCommand:")
-        if (intent?.action == null || intent.action == ACTION_START_OR_RESUME_SERVICE) {
-            Log.d(">>>>> onStartCommand", "Intent: ${intent?.action}")
-            if (viewModel.asleepConfig.value == null) {
-                if (Asleep.hasUnfinishedSession(applicationContext)) {
-                    Log.d(">>>>> onStartCommand", ": hasUnfinishedSession")
-                    viewModel.setAsleepConfig(Asleep.getSavedAsleepConfig(applicationContext, BuildConfig.ASLEEP_API_KEY))
-                }
-            }
+
+        if (intent == null || intent.action == null) { // means "user event didn't execute"
+            asleepViewModel.continueTracking()
         }
-        if (intent?.action == ACTION_STOP_SERVICE) {
-            viewModel.sleepTrackingManager?.stopSleepTracking()
-            stopSelf()
-        }
-        if (intent?.action == ACTION_ERR_EXIT) {
-            if (viewModel.sleepTrackingManager?.getTrackingStatus()?.sessionId != null) {
-                viewModel.sleepTrackingManager?.stopSleepTracking()
-            }
+
+        if (intent?.action == ACTION_STOP_SERVICE || intent?.action == ACTION_ERR_EXIT) {
+            asleepViewModel.stopSleepTracking()
             stopSelf()
         }
         return START_STICKY
@@ -120,6 +105,7 @@ class RecordService : LifecycleService() {
                 .setContentText("Running ForegroundService")
                 .setSmallIcon(R.mipmap.ic_sampleapp)
                 .setContentIntent(pendingIntent)
+                .setOngoing(true)
                 .build()
         } else {
             Notification.Builder(this)
@@ -127,6 +113,7 @@ class RecordService : LifecycleService() {
                 .setContentText("Running ForegroundService")
                 .setSmallIcon(R.mipmap.ic_sampleapp)
                 .setContentIntent(pendingIntent)
+                .setOngoing(true)
                 .build()
         }
 
@@ -138,41 +125,4 @@ class RecordService : LifecycleService() {
 
         Log.d(">>>>> ", "startForeground()")
     }
-
-    private fun createSleepTrackingManager() {
-        val asleepConfig = if (viewModel.isDeveloperModeOn) {
-            viewModel.developerModeAsleepConfig
-        } else {
-            viewModel.asleepConfig.value
-        }
-
-        viewModel.sleepTrackingManager = Asleep.createSleepTrackingManager(asleepConfig, object : SleepTrackingManager.TrackingListener {
-            override fun onCreate() {
-                Log.d(">>>>> sleepTrackingManager - ", "onCreate: start tracking")
-                Log.d(">>>>> RecordService", "onCreate) TrackingStatus.sessionId: ${viewModel.sleepTrackingManager?.getTrackingStatus()?.sessionId}")
-                Toast.makeText(applicationContext, "Create Session: ${viewModel.sleepTrackingManager?.getTrackingStatus()?.sessionId}", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onUpload(sequence: Int) {
-                Log.d(">>>>> sleepTrackingManager - ", "onUpload: $sequence")
-                viewModel.setSequence(sequence)
-            }
-
-            override fun onClose(sessionId: String) {
-                Log.d(">>>>> sleepTrackingManager - ", "onClose: $sessionId")
-                Log.d(">>>>> RecordService", "onClose) TrackingStatus.sessionId: ${viewModel.sleepTrackingManager?.getTrackingStatus()?.sessionId}")
-                viewModel.sessionIdLiveData.postValue(sessionId)
-                Toast.makeText(applicationContext, "Close: ${viewModel.sleepTrackingManager?.getTrackingStatus()?.sessionId}", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onFail(errorCode: Int, detail: String) {
-                Log.d(">>>>> sleepTrackingManager - ", "onFail: $errorCode - $detail")
-                viewModel.setErrorData(errorCode, detail)
-            }
-        })
-
-        Log.d(">>>>> RecordService", "before create) TrackingStatus.sessionId: ${viewModel.sleepTrackingManager?.getTrackingStatus()?.sessionId}")
-    }
-
-
 }
