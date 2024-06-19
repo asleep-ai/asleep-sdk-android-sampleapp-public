@@ -1,8 +1,12 @@
-## foreground service의 process 분리 작업
+## Separate the Foreground Service into a Process
 
-google의 gms, webview 등의 잦은 업데이트로 인하여 밤중 app이 종료되는 케이스를 방지하고자 foreground service의 process를 앱과 분리하는 작업
+To prevent the app from terminating, you separate the Foreground Service (FGS) into a distinct process.
 
-1. AndroidManifest.xml의 service에 process, intent-filter의 action 추가
-2. activity 프로세스와 fgs 프로세스간 통신을 위하여 aidl 파일 추가
-3. 기존 activity와 fgs에서 함께 사용하였던 viewModel 분리 작업
-4. 기타 작업으로 activity에서 fgs의 데이터 수신을 위한 bind, unbind 처리
+By separating the process, you can maintain the sleep tracking despite updates of other programs occurring at night. (e.g. updates for GMS and WebView)
+
+Please follow the steps below.
+
+1. Add the process attribute and the intent-filter's action to the <service> in AndroidManifest.xml.
+2. Add an AIDL file to enable communication between the activity process and the FGS process.
+3. Separate the ViewModel that was previously used together in the activity and FGS.
+4. Add bind and unbind handling to receive data from the FGS in the activity. For example, while sleep tracking is in progress, receive data and display it on the UI in the activity.
