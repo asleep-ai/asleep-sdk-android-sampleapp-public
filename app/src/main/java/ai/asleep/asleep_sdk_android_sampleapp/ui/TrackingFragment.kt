@@ -6,6 +6,7 @@ import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentTrackingBindin
 import ai.asleep.asleep_sdk_android_sampleapp.service.AsleepService
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,8 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class TrackingFragment : Fragment() {
+
+    private val TAG = this.javaClass.name
 
     private var _binding: FragmentTrackingBinding? = null
     private val binding get() = _binding!!
@@ -44,8 +47,13 @@ class TrackingFragment : Fragment() {
         }
 
         binding.btnTrackingStop.setOnClickListener {
-            moveToHomeScreen()
-            stopSleepTracking()
+            if (mainViewModel.isTracking == MainViewModel.TrackingState.STATE_TRACKING_STARTED) {
+                mainViewModel.isTracking = MainViewModel.TrackingState.STATE_TRACKING_STOPPING
+                moveToHomeScreen()
+                stopSleepTracking()
+            } else {
+                Log.d(TAG, "Start tracking has not been initiated yet.")
+            }
         }
 
         binding.tvStartTime.text = SampleApplication.sharedPref.getString("start_tracking_time", null)

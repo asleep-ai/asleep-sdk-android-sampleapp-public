@@ -71,9 +71,17 @@ class HomeFragment : Fragment() {
                         apply()
                     }
 
+                    if (mainViewModel.isReporting) {
+                        Toast.makeText(requireContext(), "Please wait for the report.", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
                     // start sleep tracking
-                    startTrackingService()
-                    moveToTrackingScreen()
+                    if (mainViewModel.isTracking == MainViewModel.TrackingState.STATE_TRACKING_STOPPED) {
+                        mainViewModel.isTracking = MainViewModel.TrackingState.STATE_TRACKING_STOPPING
+
+                        startTrackingService()
+                        moveToTrackingScreen()
+                    }
                 } else {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         ActivityCompat.requestPermissions(requireActivity(), arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.POST_NOTIFICATIONS), 0)
@@ -166,7 +174,9 @@ class HomeFragment : Fragment() {
                 "sleepCycleTime: " + stat.sleepCycleTime + "\n"
     }
 
-    private fun refreshReport() = mainViewModel.getSingleReport()
+    private fun refreshReport() = mainViewModel.sessionId.value?.let {
+        mainViewModel.getSingleReport(it)
+    }
 
     @SuppressLint("BatteryLife")
     private fun ignoreBatteryOptimizations() {

@@ -1,7 +1,6 @@
 package ai.asleep.asleep_sdk_android_sampleapp.ui
 
 import ai.asleep.asleep_sdk_android_sampleapp.R
-import ai.asleep.asleep_sdk_android_sampleapp.SampleApplication
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.ActivityMainBinding
 import ai.asleep.asleep_sdk_android_sampleapp.service.AsleepService
 import android.os.Bundle
@@ -43,6 +42,7 @@ class MainActivity : AppCompatActivity() {
             fragmentTransaction.replace(R.id.fragment_container_view, TrackingFragment())
             fragmentTransaction.commit()
 
+            mainViewModel.isTracking = MainViewModel.TrackingState.STATE_TRACKING_STARTED
             mainViewModel.bindService()
         }
 

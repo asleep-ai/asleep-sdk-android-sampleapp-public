@@ -73,7 +73,7 @@ class AsleepViewModel @Inject constructor(
                 }
 
                 override fun onFail(errorCode: Int, detail: String) {
-                    Log.d(">>>> AsleepConfigListener", "onFail: $errorCode - $detail")
+                    Log.d("initAsleepConfig", "onFail: $errorCode - $detail")
                     notifyListeners(listeners) { listener ->
                         listener.onErrorCodeReceived(ErrorCode(errorCode, detail))
                     }
@@ -199,7 +199,6 @@ class AsleepViewModel @Inject constructor(
             putString("user_id", userId)
             apply()
         }
-        Log.d(">>>> AsleepConfigListener", "onSuccess: userId - $userId")
     }
 
     private fun notifyListeners(listeners: RemoteCallbackList<IListener>, onReceive: (IListener) -> Unit) {
