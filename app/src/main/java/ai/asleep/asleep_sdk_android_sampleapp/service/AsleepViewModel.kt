@@ -3,8 +3,8 @@ package ai.asleep.asleep_sdk_android_sampleapp.service
 import ai.asleep.asleep_sdk_android_sampleapp.BuildConfig
 import ai.asleep.asleep_sdk_android_sampleapp.IAsleepService
 import ai.asleep.asleep_sdk_android_sampleapp.IListener
-import ai.asleep.asleep_sdk_android_sampleapp.SampleApplication
 import ai.asleep.asleep_sdk_android_sampleapp.data.ErrorCode
+import ai.asleep.asleep_sdk_android_sampleapp.utils.PreferenceHelper
 import ai.asleep.asleepsdk.Asleep
 import ai.asleep.asleepsdk.AsleepErrorCode
 import ai.asleep.asleepsdk.data.AsleepConfig
@@ -36,6 +36,9 @@ class AsleepViewModel @Inject constructor(
     private var _sleepTrackingManager: SleepTrackingManager? = null
     private var _sessionId: String? = null
     private var _sequence = MutableLiveData<Int?>(null)
+
+    var isReporting = false
+    val reportingSessionId = MutableLiveData<String>()
 
     private val listeners = RemoteCallbackList<IListener>()
     val binder: IAsleepService.Stub = object : IAsleepService.Stub() {
@@ -139,6 +142,12 @@ class AsleepViewModel @Inject constructor(
                 notifyListeners(listeners) { listener ->
                     listener.onStopTrackingReceived(_sessionId)
                 }
+
+                if (isReporting) {
+                    _sessionId?.let {
+                        reportingSessionId.value = it
+                    }
+                }
             }
 
             override fun onFail(errorCode: Int, detail: String) {
@@ -195,9 +204,8 @@ class AsleepViewModel @Inject constructor(
     }
 
     private fun saveUserIdInSharedPreference(userId: String?) {
-        with(SampleApplication.sharedPref.edit()) {
-            putString("user_id", userId)
-            apply()
+        userId?.let {
+            PreferenceHelper.putUserId(applicationContext, it)
         }
     }
 

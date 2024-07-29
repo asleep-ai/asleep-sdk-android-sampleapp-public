@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_option1"
+        android:title="Auto Tracking"/>
+<!--    <item-->
+<!--        android:id="@+id/menu_option2"-->
+<!--        android:title="Alarm Settings"/>-->
+</menu>

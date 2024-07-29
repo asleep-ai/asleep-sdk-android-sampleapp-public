@@ -1,9 +1,11 @@
 package ai.asleep.asleep_sdk_android_sampleapp.ui
 
+import ai.asleep.asleep_sdk_android_sampleapp.BuildConfig
 import ai.asleep.asleep_sdk_android_sampleapp.R
-import ai.asleep.asleep_sdk_android_sampleapp.SampleApplication
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentHomeBinding
 import ai.asleep.asleep_sdk_android_sampleapp.service.AsleepService
+import ai.asleep.asleep_sdk_android_sampleapp.ui.autotracking.AutoTrackingDialogFragment
+import ai.asleep.asleep_sdk_android_sampleapp.utils.PreferenceHelper
 import ai.asleep.asleep_sdk_android_sampleapp.utils.changeTimeFormat
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getCurrentTime
 import ai.asleep.asleepsdk.data.Report
@@ -18,13 +20,18 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.LayoutInflater
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import dagger.hilt.android.AndroidEntryPoint
+
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -38,6 +45,7 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        binding.tvVersion.text = BuildConfig.VERSION_NAME
         return binding.root
     }
 
@@ -66,18 +74,15 @@ class HomeFragment : Fragment() {
                     mainViewModel.clearSleepTrackingState()
 
                     // [Optional] store the start tracking time
-                    with(SampleApplication.sharedPref.edit()) {
-                        putString("start_tracking_time", getCurrentTime())
-                        apply()
-                    }
+                    PreferenceHelper.putStartTrackingTime(requireContext(), getCurrentTime())
 
                     if (mainViewModel.isReporting) {
                         Toast.makeText(requireContext(), "Please wait for the report.", Toast.LENGTH_SHORT).show()
                         return@setOnClickListener
                     }
                     // start sleep tracking
-                    if (mainViewModel.isTracking == MainViewModel.TrackingState.STATE_TRACKING_STOPPED) {
-                        mainViewModel.isTracking = MainViewModel.TrackingState.STATE_TRACKING_STOPPING
+                    if (mainViewModel.trackingState.value == MainViewModel.TrackingState.STATE_TRACKING_STOPPED) {
+                        mainViewModel.changeTrackingState(MainViewModel.TrackingState.STATE_TRACKING_STOPPING)
 
                         startTrackingService()
                         moveToTrackingScreen()
@@ -92,6 +97,7 @@ class HomeFragment : Fragment() {
             }
             btnRefreshReport.setOnClickListener { refreshReport() }
             btnIgnoreBatteryOpt.setOnClickListener { ignoreBatteryOptimizations() }
+            ivMenu.setOnClickListener { v -> showPopup(v) }
         }
     }
 
@@ -174,7 +180,7 @@ class HomeFragment : Fragment() {
                 "sleepCycleTime: " + stat.sleepCycleTime + "\n"
     }
 
-    private fun refreshReport() = mainViewModel.sessionId.value?.let {
+    private fun refreshReport() = mainViewModel.report.value?.session?.id?.let {
         mainViewModel.getSingleReport(it)
     }
 
@@ -208,6 +214,26 @@ class HomeFragment : Fragment() {
         val transaction = fragmentManager.beginTransaction()
         transaction.replace(R.id.fragment_container_view, TrackingFragment())
         transaction.commit()
+    }
+
+    private fun showPopup(v: View?) {
+        val popup: PopupMenu = PopupMenu(requireContext(), v)
+        val inflater: MenuInflater = popup.menuInflater
+        inflater.inflate(R.menu.drawer_menu, popup.getMenu())
+        popup.setOnMenuItemClickListener { item -> handleMenuItemClick(item) }
+        popup.show()
+    }
+
+    private fun handleMenuItemClick(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menu_option1 -> {
+                val dialog: DialogFragment = AutoTrackingDialogFragment()
+                dialog.show(requireActivity().supportFragmentManager, "TimePickerDialogFragment")
+                return true
+            }
+
+            else -> return false
+        }
     }
 
     override fun onDestroyView() {

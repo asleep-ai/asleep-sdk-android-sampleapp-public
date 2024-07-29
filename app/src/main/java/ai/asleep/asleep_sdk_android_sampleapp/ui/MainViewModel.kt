@@ -3,9 +3,9 @@ package ai.asleep.asleep_sdk_android_sampleapp.ui
 import ai.asleep.asleep_sdk_android_sampleapp.BuildConfig
 import ai.asleep.asleep_sdk_android_sampleapp.IAsleepService
 import ai.asleep.asleep_sdk_android_sampleapp.IListener
-import ai.asleep.asleep_sdk_android_sampleapp.SampleApplication
 import ai.asleep.asleep_sdk_android_sampleapp.data.ErrorCode
 import ai.asleep.asleep_sdk_android_sampleapp.service.AsleepService
+import ai.asleep.asleep_sdk_android_sampleapp.utils.PreferenceHelper
 import ai.asleep.asleepsdk.Asleep
 import ai.asleep.asleepsdk.data.AsleepConfig
 import ai.asleep.asleepsdk.data.Report
@@ -36,7 +36,7 @@ class MainViewModel @Inject constructor(
     @ApplicationContext private val applicationContext: Application
 ) : ViewModel() {
     // Step1: Init the Asleep Track SDK
-    private var _userId = MutableLiveData<String?>(SampleApplication.sharedPref.getString("user_id", null))
+    private var _userId = MutableLiveData(PreferenceHelper.getUserId(applicationContext))
     val userId: LiveData<String?> get() = _userId
 
     private var _asleepConfig: AsleepConfig? = null
@@ -57,7 +57,8 @@ class MainViewModel @Inject constructor(
 
     var isReporting = false
 
-    var isTracking = TrackingState.STATE_TRACKING_STOPPED
+    val trackingState: LiveData<TrackingState> get() = _trackingState
+    var _trackingState = MutableLiveData(TrackingState.STATE_TRACKING_STOPPED)
     enum class TrackingState { STATE_TRACKING_STOPPED, STATE_TRACKING_STARTING, STATE_TRACKING_STARTED, STATE_TRACKING_STOPPING}
 
     private val listener = object : IListener.Stub() {
@@ -77,7 +78,7 @@ class MainViewModel @Inject constructor(
                     Log.d("IListener", "onSessionIdReceived sessionId: $sessionId")
                 }
                 _sessionId.value = sessionId
-                isTracking = TrackingState.STATE_TRACKING_STARTED
+                _trackingState.value = TrackingState.STATE_TRACKING_STARTED
             }
         }
 
@@ -105,11 +106,11 @@ class MainViewModel @Inject constructor(
                     Log.d("IListener", "onStopTrackingReceived sessionId: $sessionId")
                 }
                 _sessionId.value = sessionId
-                isTracking = TrackingState.STATE_TRACKING_STOPPED
+                _trackingState.value = TrackingState.STATE_TRACKING_STOPPED
 
-                Intent(applicationContext, AsleepService::class.java).also { intent ->
-                    applicationContext.stopService(intent)
-                }
+//                Intent(applicationContext, AsleepService::class.java).also { intent ->
+//                    applicationContext.stopService(intent)
+//                }
 
                 // request report
                 if(!isReporting) {
@@ -158,8 +159,12 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun changeTrackingState(trackingState: TrackingState) {
+        _trackingState.value = trackingState
+
+    }
     fun getSingleReport(sessionId: String) {
-        if (isTracking == TrackingState.STATE_TRACKING_STOPPED) {
+        if (_trackingState.value == TrackingState.STATE_TRACKING_STOPPED) {
             userId.value?.let {
                 Asleep.initAsleepConfig(
                     context = applicationContext,
@@ -208,9 +213,8 @@ class MainViewModel @Inject constructor(
     }
 
     private fun saveUserIdInSharedPreference(userId: String?) {
-        with(SampleApplication.sharedPref.edit()) {
-            putString("user_id", userId)
-            apply()
+        userId?.let {
+            PreferenceHelper.putUserId(applicationContext, it)
         }
     }
 

@@ -1,9 +1,8 @@
 package ai.asleep.asleep_sdk_android_sampleapp.service
 
-import ai.asleep.asleep_sdk_android_sampleapp.IListener
 import ai.asleep.asleep_sdk_android_sampleapp.R
-import ai.asleep.asleep_sdk_android_sampleapp.SampleApplication
 import ai.asleep.asleep_sdk_android_sampleapp.ui.MainActivity
+import ai.asleep.asleep_sdk_android_sampleapp.utils.PreferenceHelper
 import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -14,7 +13,6 @@ import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
 import android.os.Build
 import android.os.IBinder
-import android.os.RemoteCallbackList
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleService
@@ -29,14 +27,13 @@ class AsleepService : LifecycleService() {
     @Inject
     lateinit var asleepViewModel: AsleepViewModel
 
-    private val listeners = RemoteCallbackList<IListener>()
-
     companion object {
         private const val FOREGROUND_SERVICE_ID = 1000
         private const val RECORD_NOTIFICATION_CHANNEL_ID = "12344321"
 
         const val ACTION_START_TRACKING = "ACTION_START_TRACKING"
         const val ACTION_STOP_TRACKING = "ACTION_STOP_TRACKING"
+        const val ACTION_STOP_AUTO_TRACKING = "ACTION_STOP_AUTO_TRACKING"
 
         fun isAsleepServiceRunning(context: Context): Boolean {
             val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -52,10 +49,20 @@ class AsleepService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "onCreate: ")
+        Log.d(TAG, "AsleepService onCreate: ")
         createNotificationChannel()
         startForegroundService()
 
+        asleepViewModel.reportingSessionId.observe(this) {
+            Log.d(TAG, "reportingSessionId : $it")
+            stopSelf()
+
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("reportingSessionId", it)
+            }
+            startActivity(intent)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -68,12 +75,19 @@ class AsleepService : LifecycleService() {
 
         } else if (intent.action == ACTION_START_TRACKING) {
 
-            val storedUserId = SampleApplication.sharedPref.getString("user_id", null)
+            val storedUserId = PreferenceHelper.getUserId(applicationContext)
             asleepViewModel.startSleepTracking(storedUserId)
 
         } else if (intent.action == ACTION_STOP_TRACKING) {
 
             asleepViewModel.stopSleepTracking(this)
+            stopSelf()
+
+        } else if (intent.action == ACTION_STOP_AUTO_TRACKING) {
+
+            asleepViewModel.isReporting = true
+            asleepViewModel.stopSleepTracking(this)
+
 
         }
         return START_STICKY
@@ -84,8 +98,8 @@ class AsleepService : LifecycleService() {
             val notificationChannel =
                 NotificationChannel(
                     RECORD_NOTIFICATION_CHANNEL_ID,
-                    "Recording In Progress",
-                    NotificationManager.IMPORTANCE_HIGH
+                    "Asleep Tracking In Progress",
+                    NotificationManager.IMPORTANCE_LOW
                 )
             notificationChannel.setSound(null, null)
             NotificationManagerCompat.from(applicationContext)
@@ -135,10 +149,5 @@ class AsleepService : LifecycleService() {
     override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
         return asleepViewModel.binder
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
     }
 }

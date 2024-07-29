@@ -1,0 +1,10 @@
+<!-- res/drawable/hamburger_icon.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="384"
+    android:viewportHeight="384">
+    <path
+        android:fillColor="#000000"
+        android:pathData="M12,86h360c6.6,0,12-5.4,12-12V58c0-6.6-5.4-12-12-12H12C5.4,46,0,51.4,0,58v16C0,80.6,5.4,86,12,86zM372,298H12c-6.6,0-12,5.4-12,12v16c0,6.6,5.4,12,12,12h360c6.6,0,12-5.4,12-12v-16C384,303.4,378.6,298,372,298zM372,170H12c-6.6,0-12,5.4-12,12v16c0,6.6,5.4,12,12,12h360c6.6,0,12-5.4,12-12v-16C384,175.4,378.6,170,372,170z"/>
+</vector>

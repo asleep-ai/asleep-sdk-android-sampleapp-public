@@ -1,9 +1,10 @@
 package ai.asleep.asleep_sdk_android_sampleapp.ui
 
+import ai.asleep.asleep_sdk_android_sampleapp.BuildConfig
 import ai.asleep.asleep_sdk_android_sampleapp.R
-import ai.asleep.asleep_sdk_android_sampleapp.SampleApplication
 import ai.asleep.asleep_sdk_android_sampleapp.databinding.FragmentTrackingBinding
 import ai.asleep.asleep_sdk_android_sampleapp.service.AsleepService
+import ai.asleep.asleep_sdk_android_sampleapp.utils.PreferenceHelper
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -30,6 +31,7 @@ class TrackingFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentTrackingBinding.inflate(inflater, container, false)
+        binding.tvVersion.text = BuildConfig.VERSION_NAME
         return binding.root
     }
 
@@ -37,6 +39,8 @@ class TrackingFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Display the user id
+        val storedUserId = PreferenceHelper.getUserId(requireContext())
+        binding.tvId.text = storedUserId
         mainViewModel.userId.observe(viewLifecycleOwner) { userId ->
             binding.tvId.text = userId
         }
@@ -47,8 +51,8 @@ class TrackingFragment : Fragment() {
         }
 
         binding.btnTrackingStop.setOnClickListener {
-            if (mainViewModel.isTracking == MainViewModel.TrackingState.STATE_TRACKING_STARTED) {
-                mainViewModel.isTracking = MainViewModel.TrackingState.STATE_TRACKING_STOPPING
+            if (mainViewModel.trackingState.value == MainViewModel.TrackingState.STATE_TRACKING_STARTED) {
+                mainViewModel.changeTrackingState(MainViewModel.TrackingState.STATE_TRACKING_STOPPING)
                 moveToHomeScreen()
                 stopSleepTracking()
             } else {
@@ -56,7 +60,8 @@ class TrackingFragment : Fragment() {
             }
         }
 
-        binding.tvStartTime.text = SampleApplication.sharedPref.getString("start_tracking_time", null)
+
+        binding.tvStartTime.text = PreferenceHelper.getStartTrackingTime(requireContext())
         binding.tvGuide.text = String.format(resources.getString(R.string.tracking_guidance_message))
     }
 
