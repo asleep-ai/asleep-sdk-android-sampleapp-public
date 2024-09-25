@@ -73,7 +73,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.11.0'
     debugImplementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
     implementation 'com.google.code.gson:gson:2.10'
-    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+    implementation 'ai.asleep:asleepsdk:2.4.3'
 
     // auto tracking
     implementation "androidx.work:work-runtime-ktx:2.9.0"
