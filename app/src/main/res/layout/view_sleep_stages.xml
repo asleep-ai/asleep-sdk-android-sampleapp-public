@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+        android:id="@+id/awake_bar"
+        android:layout_width="match_parent"
+        android:layout_height="32dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DDDDDD" /> <!-- Divider -->
+
+    <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+        android:id="@+id/rem_bar"
+        android:layout_width="match_parent"
+        android:layout_height="32dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DDDDDD" /> <!-- Divider -->
+
+    <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+        android:id="@+id/light_bar"
+        android:layout_width="match_parent"
+        android:layout_height="32dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DDDDDD" /> <!-- Divider -->
+
+    <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+        android:id="@+id/deep_bar"
+        android:layout_width="match_parent"
+        android:layout_height="32dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DDDDDD" /> <!-- Divider -->
+
+    <LinearLayout
+        android:id="@+id/layout_time_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_start_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            tools:text="start time"
+            android:gravity="start"/>
+
+        <TextView
+            android:id="@+id/tv_end_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            tools:text="end time"
+            android:gravity="end"/>
+
+    </LinearLayout>
+
+</merge>

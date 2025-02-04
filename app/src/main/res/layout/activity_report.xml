@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".ui.report.ReportActivity">
+
+    <LinearLayout
+        android:id="@+id/layout_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_asleep_user_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"
+            tools:text="Asleep ID: " />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_date_navigation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layout_id"
+        app:layout_constraintBottom_toTopOf="@id/sv_report"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btn_prev"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="@null"
+            android:src="@drawable/ic_navigate_before"
+            android:contentDescription="Go back buttton"/>
+
+        <TextView
+            android:id="@+id/tv_session_end_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="Session's Date"/>
+
+        <ImageButton
+            android:id="@+id/btn_next"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="@null"
+            android:src="@drawable/ic_navigate_next"
+            android:contentDescription="Next buttton"/>
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/sv_report"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginVertical="16dp"
+        android:background="@drawable/border_rectangle_black"
+        app:layout_constraintTop_toBottomOf="@id/layout_date_navigation"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:id="@+id/ll_home_report"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/tv_session_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="session_id"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:id="@+id/tv_report"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Description of report - start time, end time, session state(open, close, complete), missing data ratio, peculiarities"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/report_subtitle_sleep_stages"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+
+            <ai.asleep.asleep_sdk_android_sampleapp.ui.report.SleepStagesView
+                android:id="@+id/view_sleep_stages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="16dp"/>
+
+            <TextView
+                android:id="@+id/tv_sleep_stages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Description of sleep stages"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/report_subtitle_snoring_stages"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+
+            <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+                android:id="@+id/view_snoring_stages"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tv_snoring_stages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Description of snoring stages"
+                android:textIsSelectable="true" />
+        </LinearLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,10 +2,12 @@ package ai.asleep.asleep_sdk_android_sampleapp.utils
 
 import android.os.Build
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -32,6 +34,18 @@ internal fun changeTimeFormat(time: String?): String? {
     return null
 }
 
+internal fun getTimeOnly(time: String): String {
+    val regex = """\d{2}:\d{2}:\d{2}""".toRegex()
+    val changedTime = changeTimeFormat(time) ?: ""
+    return regex.find(changedTime)?.value ?: ""
+}
+
+internal fun getDateOnly(time: String): String {
+    val regex = """\d{4}-\d{2}-\d{2}""".toRegex()
+    val changedTime = changeTimeFormat(time) ?: ""
+    return regex.find(changedTime)?.value ?: ""
+}
+
 internal fun getCurrentTime(): String {
     var time = ""
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -45,4 +59,27 @@ internal fun getCurrentTime(): String {
         time = dateFormat.format(currentTime)
     }
     return time
+}
+
+internal fun getTodayString(): String {
+    val today = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        LocalDate.now()
+    } else {
+        val calendar = Calendar.getInstance()
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+    }
+
+    return today.toString()
+}
+
+internal fun getOneWeekAgoDateString(): String {
+    val oneWeekAgo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        LocalDate.now().minusDays(7)
+    } else {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -7)
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+    }
+
+    return oneWeekAgo.toString()
 }
