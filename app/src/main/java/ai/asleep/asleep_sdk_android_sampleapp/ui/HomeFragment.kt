@@ -125,7 +125,6 @@ class HomeFragment : Fragment() {
             tvReport.text = reportText
             tvStat.text = statText?: "is null"
             tvSleepStages.text = report.session?.sleepStages.toString()
-            tvBreathStages.text = report.session?.breathStages.toString()
             tvSnoringStages.text = report.session?.snoringStages.toString()
         }
     }
@@ -151,23 +150,16 @@ class HomeFragment : Fragment() {
                 "TimeInWake: " + stat.timeInRem + "\n" +
                 "TimeInLight: " + stat.timeInLight + "\n" +
                 "TimeInDeep: " + stat.timeInDeep + "\n" +
-                "TimeInStableBreath: " + stat.timeInStableBreath + "\n" +
-                "TimeInUnstableBreath: " + stat.timeInUnstableBreath + "\n" +
                 "SleepEfficiency: " + stat.sleepEfficiency + "\n" +
                 "WakeRatio: " + stat.wakeRatio + "\n" +
                 "SleepRatio: " + stat.sleepRatio + "\n" +
                 "RemRatio: " + stat.remRatio + "\n" +
                 "LightRatio: " + stat.lightRatio + "\n" +
                 "DeepRatio: " + stat.deepRatio + "\n" +
-                "StableBreathRatio: " + stat.stableBreathRatio + "\n" +
-                "UnstableBreathRatio: " + stat.unstableBreathRatio + "\n" +
-                "BreathingPattern: " + stat.breathingPattern + "\n" +
-                "BreathingIndex: " + stat.breathingIndex + "\n" +
                 "SleepCycle: " + stat.sleepCycle + "\n" +
                 "SleepCycleCount: " + stat.sleepCycleCount + "\n" +
                 "WasoCount: " + stat.wasoCount + "\n" +
                 "LongestWaso: " + stat.longestWaso + "\n" +
-                "UnstableBreathCount: " + stat.unstableBreathCount + "\n" +
                 "LightLatency: " + stat.lightLatency + "\n" +
                 "RemLatency: " + stat.remLatency + "\n" +
                 "DeepLatency: " + stat.deepLatency + "\n" +

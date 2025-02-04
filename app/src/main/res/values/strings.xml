@@ -16,7 +16,6 @@
     <string name="report_session_state">Session State</string>
     <string name="report_stat">Stat</string>
     <string name="report_session_sleep_stages">Sleep Stages</string>
-    <string name="report_session_breath_stages">Breath Stages</string>
     <string name="report_session_snoring_stages">Snoring Stages</string>
 
     <string name="tracking_sleep_title">Tracking Sleep....</string>

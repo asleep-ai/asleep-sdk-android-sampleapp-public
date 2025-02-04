@@ -128,20 +128,6 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/report_session_breath_stages"
-                android:textStyle="bold"
-                android:layout_marginTop="8dp"/>
-
-            <TextView
-                android:id="@+id/tv_breath_stages"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:text="1\n2\n3"
-                android:textIsSelectable="true" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="@string/report_session_snoring_stages"
                 android:textStyle="bold"
                 android:layout_marginTop="8dp"/>
@@ -202,24 +188,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
-    <!--        <Button-->
-    <!--            android:id="@+id/btn_delete_user"-->
-    <!--            android:layout_width="wrap_content"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:layout_marginTop="8dp"-->
-    <!--            android:text="@string/delete_user"/>-->
+<!--        <Button-->
+<!--            android:id="@+id/btn_delete_user"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:text="@string/delete_user"/>-->
 
-    <!--        <Button-->
-    <!--            android:id="@+id/btn_delete_report"-->
-    <!--            android:layout_width="wrap_content"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:text="@string/delete_report"/>-->
+<!--        <Button-->
+<!--            android:id="@+id/btn_delete_report"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/delete_report"/>-->
 
-    <!--        <Button-->
-    <!--            android:id="@+id/btn_reports"-->
-    <!--            android:layout_width="wrap_content"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:text="@string/reports_title"/>-->
+<!--        <Button-->
+<!--            android:id="@+id/btn_reports"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/reports_title"/>-->
 
     <ImageView
         android:id="@+id/iv_menu"
