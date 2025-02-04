@@ -1,20 +1,20 @@
 package ai.asleep.asleep_sdk_android_sampleapp
 
 import android.app.Application
-import android.content.Context
-import android.content.SharedPreferences
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class SampleApplication : Application() {
 
     companion object {
-        lateinit var sharedPref: SharedPreferences
+        private lateinit var instance: SampleApplication
+        val ACTION_AUTO_TRACKING: String by lazy {
+            instance.packageName + ".ACTION_AUTO_TRACKING"
+        }
     }
 
     override fun onCreate() {
         super.onCreate()
-        sharedPref = applicationContext.getSharedPreferences(
-            "preference_key", Context.MODE_PRIVATE)
+        instance = this
     }
 }

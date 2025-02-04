@@ -1,13 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    android:orientation="vertical"
+    android:padding="8dp"
+    tools:context=".ui.main.MainActivity">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragment_container_view"
+    <LinearLayout
+        android:id="@+id/ll_buttons"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+            android:id="@+id/btn_autotracking"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Set Auto tracking" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/btn_goto_report"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_text_view_report" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="8dp"
+        android:background="#DDDDDD" /> <!-- Divider -->
+
+    <TextView
+        android:id="@+id/tv_asleep_user_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="true"
+        tools:text="Asleep ID: " />
+
+    <LinearLayout
+        android:id="@+id/ll_permissions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_ignore_battery_opt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Ignore Battery Optimization: " />
+
+        <TextView
+            android:id="@+id/tv_mic_permission"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Microphone Permission: " />
+
+        <TextView
+            android:id="@+id/tv_noti_permission"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Notification Permission: " />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="8dp"
+        android:background="#DDDDDD" /> <!-- Divider -->
+
+    <ScrollView
+        android:id="@+id/sv_report"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/ll_tracking_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="invisible">
+
+            <TextView
+                android:id="@+id/tv_start_tracking_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Start Tracking Time" />
+
+            <TextView
+                android:id="@+id/tv_sequence"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Uploaded sequence" />
+
+            <TextView
+                android:id="@+id/tv_current_sleep_data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Current Sleep Data" />
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginVertical="16dp"-->
+<!--                android:text="@string/tracking_msg_report_guidance" />-->
+
+            <TextView
+                android:id="@+id/tv_warning_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Warning Message Log" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btn_control_tracking"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="loading..." />
+
+    <TextView
+        android:id="@+id/tv_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:textColor="#888888"
+        android:textSize="16sp"
+        tools:text="SDK-1.0.0" />
+
+</LinearLayout>
