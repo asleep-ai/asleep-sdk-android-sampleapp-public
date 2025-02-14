@@ -47,7 +47,9 @@ class AsleepViewModel @Inject constructor(
 
         override fun onPerform(sequence: Int) {
             _sequence.postValue(sequence)
-            getCurrentSleepData()
+            if (sequence > 10 && (sequence % 10 == 1 || sequence - (_analyzedSeq ?: 0) > 10)) {
+                getCurrentSleepData(sequence)
+            }
         }
 
         override fun onFinish(sessionId: String?) {
@@ -70,6 +72,7 @@ class AsleepViewModel @Inject constructor(
             handleErrorOrWarning(AsleepError(errorCode, detail))
         }
     }
+    private var _analyzedSeq: Int? = null // The seq that succeeded by receiving a success callback from getCurrentSleepData()
 
     private var _asleepErrorCode = MutableLiveData<AsleepError?>(null)
     val asleepErrorCode: LiveData<AsleepError?> get() = _asleepErrorCode
@@ -160,7 +163,7 @@ class AsleepViewModel @Inject constructor(
         _asleepState.value = AsleepState.STATE_TRACKING_STARTED
     }
 
-    private fun getCurrentSleepData() {
+    private fun getCurrentSleepData(seq: Int) {
         Asleep.getCurrentSleepData(
             asleepSleepDataListener = object : Asleep.AsleepSleepDataListener {
                 override fun onFail(errorCode: Int, detail: String) {
@@ -168,6 +171,7 @@ class AsleepViewModel @Inject constructor(
                 }
                 override fun onSleepDataReceived(session: Session) {
                     _currentSleepData.postValue(session)
+                    _analyzedSeq = seq
                 }
             }
         )
