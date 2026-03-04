@@ -32,8 +32,8 @@ internal fun getDebugMessage(errorCode: AsleepError): String {
         AsleepErrorCode.ERR_AUDIO -> "Another app is using the microphone, or there is an issue with the microphone settings."
         AsleepErrorCode.ERR_INVALID_URL -> "Please check the URL format."
         AsleepErrorCode.ERR_COMMON_EXPIRED -> "The API rate limit has been exceeded, or the plan has expired."
-        AsleepErrorCode.ERR_UPLOAD_FORBIDDEN -> "initAsleepConfig() was performed elsewhere with the same ID during the tracking."
-        AsleepErrorCode.ERR_UPLOAD_NOT_FOUND, AsleepErrorCode.ERR_CLOSE_NOT_FOUND -> "The session has already ended."
+        //AsleepErrorCode.ERR_UPLOAD_TRACKING_TERMINATED -> "The tracking session has been terminated."
+        AsleepErrorCode.ERR_CLOSE_NOT_FOUND -> "The session has already ended."
         else -> ""
     }
 }

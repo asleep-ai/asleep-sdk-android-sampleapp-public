@@ -51,7 +51,7 @@ class ReportViewModel @Inject constructor(
     fun updateLastestSessionId(sessionId: String?) {
         sessionId?.let {
             _latestSessionId.value = it
-        } ?: {
+        } ?: run {
             Toast.makeText(applicationContext, "No Session ID", Toast.LENGTH_SHORT).show()
         }
     }
@@ -140,7 +140,7 @@ class ReportViewModel @Inject constructor(
         )
     }
 
-    fun getPreviousReport() {
+    fun showOlderReport() {
         _reportList.value?.let { list ->
             if (list.isNotEmpty()) {
                 currentIndex = if (currentIndex + 1 >= list.lastIndex) list.lastIndex else currentIndex + 1
@@ -149,7 +149,7 @@ class ReportViewModel @Inject constructor(
         }
     }
 
-    fun getNextReport() {
+    fun showNewerReport() {
         _reportList.value?.let { list ->
             if (list.isNotEmpty()) {
                 currentIndex = if (currentIndex - 1 < 0) 0 else currentIndex - 1
