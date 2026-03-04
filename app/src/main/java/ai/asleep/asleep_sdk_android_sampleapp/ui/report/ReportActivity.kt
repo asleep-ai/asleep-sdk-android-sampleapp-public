@@ -12,6 +12,7 @@ import ai.asleep.asleep_sdk_android_sampleapp.utils.getTimeOnly
 import ai.asleep.asleep_sdk_android_sampleapp.utils.showErrorDialog
 import ai.asleep.asleepsdk.data.Report
 import android.os.Bundle
+import androidx.core.content.ContextCompat
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -55,8 +56,8 @@ class ReportActivity : AppCompatActivity() {
             errorCode?.let { showErrorDialog(supportFragmentManager) }
         }
 
-        binding.btnPrev.setOnClickListener { reportViewModel.getPreviousReport() }
-        binding.btnNext.setOnClickListener { reportViewModel.getNextReport() }
+        binding.btnPrev.setOnClickListener { reportViewModel.showOlderReport() }
+        binding.btnNext.setOnClickListener { reportViewModel.showNewerReport() }
     }
 
     private fun initAsleepConfig(asleepUserId: String?) {
@@ -98,10 +99,10 @@ class ReportActivity : AppCompatActivity() {
     private fun sleepStageItem(report: Report) {
         report.session?.let { session ->
             val stages = session.sleepStages
-            val awakeSlice = makeSlice(stages, 0, mainColor = 0xFFF8F5C5.toInt(), otherColor = 0x00000000)
-            val remSlice = makeSlice(stages, 3, mainColor = 0xFFE7E8FC.toInt(), otherColor = 0x00000000)
-            val lightSlice = makeSlice(stages, 1, mainColor = 0xFFC3C6F7.toInt(), otherColor = 0x00000000)
-            val deepSlice = makeSlice(stages, 2, mainColor = 0xFF99A1F2.toInt(), otherColor = 0x00000000)
+            val awakeSlice = makeSlice(stages, 0, mainColor = ContextCompat.getColor(this, R.color.sleep_stage_awake), otherColor = ContextCompat.getColor(this, R.color.transparent))
+            val remSlice = makeSlice(stages, 3, mainColor = ContextCompat.getColor(this, R.color.sleep_stage_rem), otherColor = ContextCompat.getColor(this, R.color.transparent))
+            val lightSlice = makeSlice(stages, 1, mainColor = ContextCompat.getColor(this, R.color.sleep_stage_light), otherColor = ContextCompat.getColor(this, R.color.transparent))
+            val deepSlice = makeSlice(stages, 2, mainColor = ContextCompat.getColor(this, R.color.sleep_stage_deep), otherColor = ContextCompat.getColor(this, R.color.transparent))
 
             binding.viewSleepStages.apply {
                 setStackedBarData(0, awakeSlice)

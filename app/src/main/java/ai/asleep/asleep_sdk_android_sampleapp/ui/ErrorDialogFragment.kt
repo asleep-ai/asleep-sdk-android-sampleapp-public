@@ -35,7 +35,7 @@ class ErrorDialogFragment : DialogFragment() {
                                 asleepViewModel.clearAsleepError()
                                 dialog.dismiss()
                             }
-                    } ?: { builder.setTitle("Unknown Issue") }
+                    } ?: run { builder.setTitle("Unknown Issue") }
                 }
                 is ReportActivity -> {
                     reportViewModel.asleepErrorCode.value?.let {
@@ -46,7 +46,7 @@ class ErrorDialogFragment : DialogFragment() {
                                 reportViewModel.clearAsleepError()
                                 dialog.dismiss()
                             }
-                    } ?: { builder.setTitle("Unknown Issue") }
+                    } ?: run { builder.setTitle("Unknown Issue") }
                 }
             }
             builder.create()

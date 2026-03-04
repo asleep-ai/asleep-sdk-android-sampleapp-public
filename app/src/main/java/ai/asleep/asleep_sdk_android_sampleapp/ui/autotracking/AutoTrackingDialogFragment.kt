@@ -145,7 +145,7 @@ class AutoTrackingDialogFragment : DialogFragment() {
                 alarmIntent
             )
         } catch (e: SecurityException) {
-            e.printStackTrace()
+            Log.e(this::class.java.simpleName, "Failed to set exact alarm", e)
         }
     }
 
