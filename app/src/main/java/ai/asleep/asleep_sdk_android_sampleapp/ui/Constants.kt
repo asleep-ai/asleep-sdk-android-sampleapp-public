@@ -5,7 +5,8 @@ import ai.asleep.asleep_sdk_android_sampleapp.BuildConfig
 object Constants {
     val BASE_URL: String? = null
     val CALLBACK_URL: String? = null
-    const val ASLEEP_API_KEY = BuildConfig.ASLEEP_API_KEY
+    const val ASLEEP_APP_ID = BuildConfig.ASLEEP_APP_ID
+    const val ASLEEP_APP_SECRET = BuildConfig.ASLEEP_APP_SECRET
     const val SERVICE_NAME = "AsleepSampleApp"
 
     const val MIN_TRACKING_MINUTES = 5

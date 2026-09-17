@@ -21,7 +21,8 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "ASLEEP_API_KEY", properties['asleep_api_key']
+        buildConfigField "String", "ASLEEP_APP_ID", properties['asleep.appId']
+        buildConfigField "String", "ASLEEP_APP_SECRET", properties['asleep.appSecret']
     }
 
     buildTypes {

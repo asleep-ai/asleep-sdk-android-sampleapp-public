@@ -110,7 +110,8 @@ class AsleepViewModel @Inject constructor(
             val storedUserId = PreferenceHelper.getAsleepUserId(applicationContext)
             Asleep.initAsleepConfig(
                 context = applicationContext,
-                apiKey = Constants.ASLEEP_API_KEY,
+                appId = Constants.ASLEEP_APP_ID,
+                appSecret = Constants.ASLEEP_APP_SECRET,
                 userId = storedUserId,
                 baseUrl = Constants.BASE_URL,
                 callbackUrl = Constants.CALLBACK_URL,
@@ -212,7 +213,8 @@ class AsleepViewModel @Inject constructor(
     fun beginAutoSleepTracking(storedUserId: String?) {
         Asleep.initAsleepConfig(
             context = applicationContext,
-            apiKey = Constants.ASLEEP_API_KEY,
+            appId = Constants.ASLEEP_APP_ID,
+            appSecret = Constants.ASLEEP_APP_SECRET,
             userId = storedUserId,
             baseUrl = Constants.BASE_URL,
             callbackUrl = Constants.CALLBACK_URL,

@@ -138,7 +138,8 @@ class ReportViewModel @Inject constructor(
     fun initAsleepConfig(userId: String) {
         Asleep.initAsleepConfig(
             context = applicationContext,
-            apiKey = Constants.ASLEEP_API_KEY,
+            appId = Constants.ASLEEP_APP_ID,
+            appSecret = Constants.ASLEEP_APP_SECRET,
             userId = userId,
             baseUrl = Constants.BASE_URL,
             callbackUrl = Constants.CALLBACK_URL,
