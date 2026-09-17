@@ -23,6 +23,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AsleepSdkSample"
         tools:targetApi="31">
+        <!-- Hosts the SleepTrackingManager session in a dedicated process, mirroring the SDK's
+             built-in Foreground Service. The UI talks to it over the IAsleepService binder. -->
+        <service
+            android:name=".service.AsleepService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":RecordingService"
+            android:foregroundServiceType="microphone"
+            android:stopWithTask="false">
+            <intent-filter>
+                <action android:name="ai.asleep.asleep_sdk_android_sampleapp.IAsleepService" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"

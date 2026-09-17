@@ -27,7 +27,7 @@ class InsufficientTimeDialogFragment : DialogFragment() {
                     dialog.dismiss()
                 }
                 .setPositiveButton(getString(R.string.insufficient_time_dialog_positive_button)) { dialog, id ->
-                    asleepViewModel.endSleepTracking()
+                    asleepViewModel.stopSleepTracking()
                     dialog.dismiss()
                 }
             builder.create()

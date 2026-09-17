@@ -44,6 +44,10 @@
 
     <string name="content_description_asleep_logo">Asleep logo</string>
 
+    <string name="notification_channel_tracking_name">Asleep Tracking In Progress</string>
+    <string name="notification_tracking_title">Tracking Sleep</string>
+    <string name="notification_tracking_text">Running ForegroundService</string>
+
     <string name="dialog_confirm_button">OK</string>
     <string name="report_close_button">Close</string>
     <string name="permission_dialog_title">Allow Access Permission</string>

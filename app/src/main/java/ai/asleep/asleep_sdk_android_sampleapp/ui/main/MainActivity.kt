@@ -9,13 +9,13 @@ import ai.asleep.asleep_sdk_android_sampleapp.ui.Constants.EXTRA_FROM_STATE
 import ai.asleep.asleep_sdk_android_sampleapp.ui.Constants.EXTRA_SESSION_ID
 import ai.asleep.asleep_sdk_android_sampleapp.ui.autotracking.AutoTrackingDialogFragment
 import ai.asleep.asleep_sdk_android_sampleapp.ui.report.ReportActivity
+import ai.asleep.asleep_sdk_android_sampleapp.data.CurrentSleepData
+import ai.asleep.asleep_sdk_android_sampleapp.service.AsleepService
 import ai.asleep.asleep_sdk_android_sampleapp.utils.PreferenceHelper
 import ai.asleep.asleep_sdk_android_sampleapp.utils.formatTimestamp
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getSleepStageText
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getSnoringStageText
 import ai.asleep.asleep_sdk_android_sampleapp.utils.showErrorDialog
-import ai.asleep.asleepsdk.Asleep
-import ai.asleep.asleepsdk.data.Session
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -48,12 +48,14 @@ class MainActivity : AppCompatActivity() {
         setPermissionObserver()
         permissionManager.checkAllPermissions()
 
+        handleServiceEntry()
+
         // Define Main screen by AsleepState
         lifecycleScope.launch {
             asleepViewModel.asleepState.collect { state ->
                 when (state) {
                     AsleepState.STATE_IDLE -> {
-                        checkRunningService()
+                        asleepViewModel.initAsleepConfig()
                     }
                     AsleepState.STATE_INITIALIZING -> {
                         binding.llButtons.visibility = View.VISIBLE
@@ -70,7 +72,7 @@ class MainActivity : AppCompatActivity() {
                             text = getString(R.string.button_text_start_tracking)
                             setOnClickListener {
                                 if (permissionManager.allPermissionsGranted.value == true) {
-                                    asleepViewModel.beginSleepTracking()
+                                    asleepViewModel.startSleepTracking()
                                 } else {
                                     permissionManager.checkAndRequestPermissions()
                                 }
@@ -94,7 +96,7 @@ class MainActivity : AppCompatActivity() {
                             text = getString(R.string.button_text_stop_tracking)
                             setOnClickListener {
                                 if (asleepViewModel.isEnoughTrackingTime()) {
-                                    asleepViewModel.endSleepTracking()
+                                    asleepViewModel.stopSleepTracking()
                                 } else {
                                     showInsufficientTimeDialog()
                                 }
@@ -130,7 +132,7 @@ class MainActivity : AppCompatActivity() {
             binding.tvSequence.text = getUploadedSequenceText(sequence)
         }
         asleepViewModel.currentSleepData.observe(this) {
-            it?.let { session -> showCurrentSleepData(session) }
+            it?.let { currentSleepData -> showCurrentSleepData(currentSleepData) }
         }
         asleepViewModel.warningMessage.observe(this) { warningMessage ->
             binding.tvWarningMessage.text = warningMessage
@@ -150,19 +152,43 @@ class MainActivity : AppCompatActivity() {
        progress - the report screen would then wait for a callback that never comes. Every entry
        point (button, auto-navigation, service wake-up) funnels through this gate. */
     private var pendingReportState: String? = null
+    private var pendingReportSessionId: String? = null
 
-    private fun requestReportNavigation(state: String) {
+    private fun requestReportNavigation(state: String, sessionId: String? = null) {
         when (asleepViewModel.asleepState.value) {
-            AsleepState.STATE_INITIALIZED, AsleepState.STATE_TRACKING_STARTED -> gotoReportActivity(state)
+            AsleepState.STATE_INITIALIZED, AsleepState.STATE_TRACKING_STARTED -> gotoReportActivity(state, sessionId)
             is AsleepState.STATE_ERROR -> Unit  // init failed - the error dialog is already shown
-            else -> pendingReportState = state  // queued until STATE_INITIALIZED / STARTED
+            else -> {                           // queued until STATE_INITIALIZED / STARTED
+                pendingReportState = state
+                pendingReportSessionId = sessionId
+            }
         }
     }
 
     private fun flushPendingReportNavigation() {
         pendingReportState?.let {
+            val sessionId = pendingReportSessionId
             pendingReportState = null
-            gotoReportActivity(it)
+            pendingReportSessionId = null
+            gotoReportActivity(it, sessionId)
+        }
+    }
+
+    /**
+     * The session lives in the `:RecordingService` process, so on entry the app has to ask the
+     * system whether AsleepService is still running and, if so, bind to it to resume receiving
+     * updates. A `reportingSessionId` extra means AsleepService brought the app up because auto
+     * tracking just finished.
+     */
+    private fun handleServiceEntry() {
+        val reportingSessionId = intent.getStringExtra(Constants.EXTRA_REPORTING_SESSION_ID)
+        if (!reportingSessionId.isNullOrEmpty()) {
+            requestReportNavigation(Constants.StateName.TRACKING.name, reportingSessionId)
+            return
+        }
+
+        if (AsleepService.isAsleepServiceRunning(applicationContext)) {
+            asleepViewModel.connectRunningService()
         }
     }
 
@@ -189,9 +215,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     /* Stages only arrive once enough audio has been analysed, so each line stays hidden
-       until the SDK reports a value. */
-    private fun showCurrentSleepData(session: Session) {
-        val sleepStage = session.sleepStages?.lastOrNull()
+       until the SDK reports a value.
+       Session is not Parcelable, so the service sends only the latest stages across the process
+       boundary. See data/CurrentSleepData.kt. */
+    private fun showCurrentSleepData(currentSleepData: CurrentSleepData) {
+        val sleepStage = currentSleepData.lastSleepStage
         binding.tvCurrentSleepStage.apply {
             if (sleepStage == null) {
                 visibility = View.GONE
@@ -201,7 +229,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val snoringStage = session.snoringStages?.lastOrNull()
+        val snoringStage = currentSleepData.lastSnoringStage
         binding.tvCurrentSnoringStage.apply {
             if (snoringStage == null) {
                 visibility = View.GONE
@@ -245,7 +273,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun gotoReportActivity(state: String) {
+    private fun gotoReportActivity(state: String, sessionId: String? = null) {
         val asleepUserId = asleepViewModel.asleepUserId.value
         asleepUserId?.let { userid ->
             val intent = Intent(this@MainActivity, ReportActivity::class.java).apply {
@@ -253,19 +281,10 @@ class MainActivity : AppCompatActivity() {
                 putExtra(EXTRA_ASLEEP_USER_ID, userid)
                 putExtra(EXTRA_FROM_STATE, state)
                 if (state.equals(Constants.StateName.TRACKING.name)) {
-                    putExtra(EXTRA_SESSION_ID, asleepViewModel.sessionId.value)
+                    putExtra(EXTRA_SESSION_ID, sessionId ?: asleepViewModel.sessionId.value)
                 }
             }
             startActivity(intent)
-        }
-    }
-
-    private fun checkRunningService() {
-        val isRunningService = Asleep.isSleepTrackingAlive(applicationContext)
-        if (isRunningService) {
-            asleepViewModel.connectSleepTracking()
-        } else {
-            asleepViewModel.initAsleepConfig()
         }
     }
 }

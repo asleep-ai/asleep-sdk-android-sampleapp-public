@@ -15,6 +15,9 @@ object Constants {
     const val EXTRA_SESSION_ID = "SESSION_ID"
     const val EXTRA_FROM_STATE = "FROM_STATE"
 
+    // Set by AsleepService when auto tracking ends while the app is not on screen
+    const val EXTRA_REPORTING_SESSION_ID = "REPORTING_SESSION_ID"
+
     enum class StateName {
         INIT, TRACKING
     }
