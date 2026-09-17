@@ -34,6 +34,11 @@ internal fun getDebugMessage(errorCode: AsleepError): String {
         AsleepErrorCode.ERR_COMMON_EXPIRED -> "The API rate limit has been exceeded, or the plan has expired."
         //AsleepErrorCode.ERR_UPLOAD_TRACKING_TERMINATED -> "The tracking session has been terminated."
         AsleepErrorCode.ERR_CLOSE_NOT_FOUND -> "The session has already ended."
+        // Product registration (Asleep.setup with productInfo)
+        AsleepErrorCode.ERR_PRODUCT_REGISTER_FAILED ->
+            "Failed to register the product. This is usually temporary - check the network and run setup again."
+        AsleepErrorCode.ERR_PRODUCT_REGISTER_REJECTED ->
+            "The product registration was rejected. Check the ProductInfo values and the API key permission - retrying will not help."
         else -> ""
     }
 }

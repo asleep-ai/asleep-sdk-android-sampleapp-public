@@ -8,6 +8,10 @@ object Constants {
     const val ASLEEP_API_KEY = BuildConfig.ASLEEP_API_KEY
     const val SERVICE_NAME = "AsleepSampleApp"
 
+    // Product model registered through Asleep.setup(). Replace it with the model name issued
+    // for your product.
+    const val PRODUCT_MODEL = "model-123"
+
     const val MIN_TRACKING_MINUTES = 5
 
     // intent extra names

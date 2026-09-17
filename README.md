@@ -1,83 +1,94 @@
-# Asleep SDK Android Sample
+# Asleep SDK Android Sample — `sample/setup-product-beginend-polling`
 
-A sample application that demonstrates how to use the Asleep Android SDK.
+> This branch is a variant of the [default branch](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/main).
+> See the default branch README for the full list of variants.
 
-- 100% Kotlin
-- AAC ViewModel based
-- Built against the latest Asleep Android SDK (3.3.0)
+> **Requires a server-side plan.** Product registration only works when your contract includes
+> product-based billing. Contact **platform-cs@asleep.ai** to enable it on your plan.
 
-See the [Asleep SDK Android Docs](https://docs.asleep.ai/docs/android) for integration details.
+## What this branch demonstrates
 
-## Standard implementation (this branch)
+Registering the device as a **product with `Asleep.setup()` + `ProductInfo`** before the app initializes.
 
-This branch contains the **most standard integration**.
+When `productInfo` is passed to `Asleep.setup()`, setup acts as a **gate**: the device is registered as a billable product first, and SDK configuration continues only after registration succeeds. The issued credential is cached by the SDK, so **the registration request goes to the server only once** — later launches call `onComplete` without any network call.
 
-| Topic | This branch |
-|---|---|
-| Authentication | `Asleep.initAsleepConfig(apiKey = ...)` — direct API Key initialization |
-| Tracking | `Asleep.beginSleepTracking()` / `Asleep.endSleepTracking()` — the SDK's built-in Foreground Service |
-| Callbacks | `Asleep.AsleepTrackingListener` (`onStart` / `onPerform` / `onFinish` / `onFail`) |
-| Interim results | Polling with `Asleep.getCurrentSleepData()` |
-| Reports | Session list and details via `Asleep.createReports()` |
+| Topic | default | This branch |
+|---|---|---|
+| Initialization | `initAsleepConfig(apiKey = ...)` directly | `Asleep.setup(..., productInfo = ...)` first, then `initAsleepConfig()` |
+| Authentication | API Key | same (API Key) |
+| Tracking | `Asleep.beginSleepTracking()` / `endSleepTracking()` | same |
+| Callbacks | `Asleep.AsleepTrackingListener` | same |
+| Interim results | Polling with `Asleep.getCurrentSleepData()` | same |
 
-## Sample branches
+## Changes from default
 
-Each branch below starts from this one and changes **a single integration decision**, so you can diff exactly the part you need.
+### `ui/main/AsleepViewModel.kt`
 
-| Branch | What it demonstrates |
-|---|---|
-| [`main`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/main) (default) | The standard integration described above — API Key + `beginSleepTracking()` + polling |
-| [`sample/init-startstop-polling`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/sample/init-startstop-polling) | Driving tracking directly with `SleepTrackingManager.startSleepTracking()` / `stopSleepTracking()` |
-| [`sample/init-beginend-complete-recording`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/sample/init-beginend-complete-recording) | Keeping recording files with `CompletableAsleepTrackingListener` + `recordingPath` / `RecordingType` |
-| [`sample/setup-product-beginend-polling`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/sample/setup-product-beginend-polling) | Registering the device as a product with `Asleep.setup()` + `ProductInfo` before initialization |
-| [`sample/init-appid-beginend-polling`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/sample/init-appid-beginend-polling) | Authenticating with `appId` / `appSecret` tokens instead of an API Key |
+Adds `setupAsleep()` and routes both entry points (`initAsleepConfig()` / `beginAutoSleepTracking()`) through the gate.
 
-## Features
+```kotlin
+Asleep.setup(
+    context = applicationContext,
+    apiKey = Constants.ASLEEP_API_KEY,
+    baseUrl = Constants.BASE_URL,
+    callbackUrl = Constants.CALLBACK_URL,
+    service = Constants.SERVICE_NAME,
+    asleepSetupListener = object : Asleep.AsleepSetupListener {
+        override fun onComplete() { /* registered -> proceed to initAsleepConfig() */ }
+        override fun onProgress(progress: Int) { /* progress log */ }
+        override fun onFail(errorCode: Int, detail: String) { /* handle 13000 / 13400 */ }
+    },
+    productInfo = ProductInfo(
+        model = Constants.PRODUCT_MODEL,
+        identifierType = Asleep.ProductIdentifierType.SERIAL,
+        identifierValue = PreferenceHelper.getOrCreateProductSerial(applicationContext)
+    )
+)
+```
 
-- Requests microphone and notification permissions for sleep tracking
-- Optionally requests a battery-optimization exemption
-- Runs sleep tracking while showing progress on screen
-- Shows the report of the session that just ended
-- Browses the report list in date order, newest or oldest first
+- `onComplete()` continues into the existing `initAsleepConfig()` flow.
+- The former `initAsleepConfig()` body is extracted into `requestAsleepConfig()` so both paths share it.
 
-## Things to check
+### `utils/PreferenceHelper.kt`
 
-- If sleep tracking does not work, check the following:
-    1. The device microphone works
-    2. The Foreground Service notification is visible
-- The battery-optimization exemption is not required, but it helps keep the device out of Doze mode.
-- A meaningful report needs at least 5 minutes of tracking (10+ uploads).
+Adds `getOrCreateProductSerial()` — generates a UUID once, stores it, and reuses it afterwards. The identifier **must be a stable value**: if it changes on every launch, a new product is registered each time. For a real product, use the device's engraved serial or MAC address.
 
-## How to run
+### `utils/AsleepErrorUtils.kt`
 
-1. Clone or download this project.
-2. Add your issued API Key to `local.properties` in the project root.
+Adds guidance messages for the product registration failure codes.
+
+| Code | Constant | Meaning |
+|---|---|---|
+| `13000` | `ERR_PRODUCT_REGISTER_FAILED` | Transient failure (network / 5xx). Calling setup again may succeed |
+| `13400` | `ERR_PRODUCT_REGISTER_REJECTED` | Permanent rejection (4xx: bad input, credentials, or no permission). Retrying will not help |
+
+Both codes transition to `STATE_ERROR` and show the guidance in the existing error dialog.
+
+### `ui/Constants.kt`
+
+Adds `PRODUCT_MODEL = "model-123"` — **a placeholder.** Replace it with your issued model name for a real integration.
+
+## Setup
+
+1. Add your issued API Key to `local.properties` in the project root.
 
    ```properties
    asleep_api_key="YOUR_API_KEY"
    ```
 
-   > `local.properties` is covered by `.gitignore`. Never commit your API Key.
+2. Replace `PRODUCT_MODEL` in `ui/Constants.kt` with your issued model name.
 
-3. Run in Android Studio. Gradle and Android SDK components may need to be downloaded.
+   ```kotlin
+   const val PRODUCT_MODEL = "model-123"  // replace with your model name
+   ```
 
-### Build environment
+3. The identifier (`identifierValue`) is a UUID the app generates and stores in `SharedPreferences`. For a real product, replace it with the device's unique serial or MAC address, and set `identifierType` to `SERIAL` or `MAC_ADDRESS` accordingly.
 
-| Item | Version |
-|---|---|
-| compileSdk | 34 |
-| minSdk | 24 |
-| targetSdk | 34 |
-| Gradle | 8.7 |
-| Android Gradle Plugin | 8.5.1 |
-| Kotlin | 1.9.24 |
-| JDK | 17 |
-| Asleep SDK | 3.3.0 |
+4. Run in Android Studio.
 
-## Feedback and questions
+> Registration success shows up in the log as `setup onComplete`. If relaunching the app fires `onComplete` immediately without a server call, the credential cache is working.
 
-Leave feedback or questions [here](https://docs.asleep.ai/discuss).
+## See also
 
-## License
-
-See [here](https://docs.asleep.ai/) for the sample app license.
+- [Asleep SDK Android Docs](https://docs.asleep.ai/docs/android)
+- [Back to the default branch](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/main)

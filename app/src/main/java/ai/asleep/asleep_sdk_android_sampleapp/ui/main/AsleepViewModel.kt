@@ -11,8 +11,10 @@ import ai.asleep.asleep_sdk_android_sampleapp.utils.getCurrentTime
 import ai.asleep.asleep_sdk_android_sampleapp.utils.isWarning
 import ai.asleep.asleepsdk.Asleep
 import ai.asleep.asleepsdk.data.AsleepConfig
+import ai.asleep.asleepsdk.data.ProductInfo
 import ai.asleep.asleepsdk.data.Session
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -22,6 +24,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import kotlin.math.abs
+
+private const val TAG = "AsleepViewModel"
 
 @HiltViewModel
 class AsleepViewModel @Inject constructor(
@@ -84,6 +88,9 @@ class AsleepViewModel @Inject constructor(
     private var _asleepState = MutableStateFlow<AsleepState>(AsleepState.STATE_IDLE)
     val asleepState: StateFlow<AsleepState> get() = _asleepState
 
+    // Asleep.setup() only has to run once per process.
+    private var isSetupCompleted = false
+
     // go to report
     private var enoughTrackingTime: Boolean = false
     private var _shouldGoToReport = MutableLiveData(false)
@@ -100,6 +107,55 @@ class AsleepViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Registers this device as a product, then hands control to [onSetupComplete].
+     *
+     * The issued credential is cached by the SDK, so only the first run reaches the server;
+     * later launches complete without a network call. Setup is also a gate - initAsleepConfig()
+     * must not run until it has completed.
+     */
+    private fun setupAsleep(onSetupComplete: () -> Unit) {
+        if (isSetupCompleted) {
+            onSetupComplete()
+            return
+        }
+
+        Asleep.setup(
+            context = applicationContext,
+            apiKey = Constants.ASLEEP_API_KEY,
+            baseUrl = Constants.BASE_URL,
+            callbackUrl = Constants.CALLBACK_URL,
+            service = Constants.SERVICE_NAME,
+            asleepLogger = SampleAsleepLogger,
+            asleepSetupListener = object : Asleep.AsleepSetupListener {
+                override fun onComplete() {
+                    Log.d(TAG, "setup onComplete")
+                    isSetupCompleted = true
+                    onSetupComplete()
+                }
+
+                override fun onProgress(progress: Int) {
+                    Log.d(TAG, "setup onProgress: $progress")
+                }
+
+                override fun onFail(errorCode: Int, detail: String) {
+                    // 13000 (ERR_PRODUCT_REGISTER_FAILED): transient - retrying setup may succeed.
+                    // 13400 (ERR_PRODUCT_REGISTER_REJECTED): permanent - the request itself is
+                    // wrong (ProductInfo values or credentials), so retrying is pointless.
+                    Log.e(TAG, "setup onFail: $errorCode - $detail")
+                    val asleepError = AsleepError(errorCode, detail)
+                    _asleepErrorCode.value = asleepError
+                    _asleepState.value = AsleepState.STATE_ERROR(asleepError)
+                }
+            },
+            productInfo = ProductInfo(
+                model = Constants.PRODUCT_MODEL,
+                identifierType = Asleep.ProductIdentifierType.SERIAL,
+                identifierValue = PreferenceHelper.getOrCreateProductSerial(applicationContext)
+            )
+        )
+    }
+
     fun initAsleepConfig() {
         if (_asleepState.value != AsleepState.STATE_IDLE) {
             return
@@ -108,31 +164,36 @@ class AsleepViewModel @Inject constructor(
         if (_asleepConfig.value == null) {
             _asleepState.value = AsleepState.STATE_INITIALIZING
             val storedUserId = PreferenceHelper.getAsleepUserId(applicationContext)
-            Asleep.initAsleepConfig(
-                context = applicationContext,
-                apiKey = Constants.ASLEEP_API_KEY,
-                userId = storedUserId,
-                baseUrl = Constants.BASE_URL,
-                callbackUrl = Constants.CALLBACK_URL,
-                service = Constants.SERVICE_NAME,
-                asleepLogger = SampleAsleepLogger,
-                asleepConfigListener = object : Asleep.AsleepConfigListener {
-                    override fun onFail(errorCode: Int, detail: String) {
-                        _asleepErrorCode.value = AsleepError(errorCode, detail)
-                        _asleepState.value = AsleepState.STATE_ERROR(AsleepError(errorCode, detail))
-                    }
-
-                    override fun onSuccess(userId: String?, asleepConfig: AsleepConfig?) {
-                        _asleepConfig.value = asleepConfig
-                        _asleepUserId.value = userId
-                        userId?.let { PreferenceHelper.putAsleepUserId(applicationContext, it) }
-                        _asleepState.value = AsleepState.STATE_INITIALIZED
-                    }
-                }
-            )
+            setupAsleep { requestAsleepConfig(storedUserId) }
         } else {
             _asleepState.value = AsleepState.STATE_INITIALIZED
         }
+    }
+
+    private fun requestAsleepConfig(storedUserId: String?, onInitialized: (() -> Unit)? = null) {
+        Asleep.initAsleepConfig(
+            context = applicationContext,
+            apiKey = Constants.ASLEEP_API_KEY,
+            userId = storedUserId,
+            baseUrl = Constants.BASE_URL,
+            callbackUrl = Constants.CALLBACK_URL,
+            service = Constants.SERVICE_NAME,
+            asleepLogger = SampleAsleepLogger,
+            asleepConfigListener = object : Asleep.AsleepConfigListener {
+                override fun onFail(errorCode: Int, detail: String) {
+                    _asleepErrorCode.value = AsleepError(errorCode, detail)
+                    _asleepState.value = AsleepState.STATE_ERROR(AsleepError(errorCode, detail))
+                }
+
+                override fun onSuccess(userId: String?, asleepConfig: AsleepConfig?) {
+                    _asleepConfig.value = asleepConfig
+                    _asleepUserId.value = userId
+                    userId?.let { PreferenceHelper.putAsleepUserId(applicationContext, it) }
+                    _asleepState.value = AsleepState.STATE_INITIALIZED
+                    onInitialized?.invoke()
+                }
+            }
+        )
     }
 
     fun beginSleepTracking() {
@@ -210,28 +271,8 @@ class AsleepViewModel @Inject constructor(
 
     // call beginTracking() in initAsleepConfig()'s onSuccess callback
     fun beginAutoSleepTracking(storedUserId: String?) {
-        Asleep.initAsleepConfig(
-            context = applicationContext,
-            apiKey = Constants.ASLEEP_API_KEY,
-            userId = storedUserId,
-            baseUrl = Constants.BASE_URL,
-            callbackUrl = Constants.CALLBACK_URL,
-            service = Constants.SERVICE_NAME,
-                asleepLogger = SampleAsleepLogger,
-            asleepConfigListener = object : Asleep.AsleepConfigListener {
-                override fun onFail(errorCode: Int, detail: String) {
-                    _asleepErrorCode.value = AsleepError(errorCode, detail)
-                    _asleepState.value = AsleepState.STATE_ERROR(AsleepError(errorCode, detail))
-                }
-
-                override fun onSuccess(userId: String?, asleepConfig: AsleepConfig?) {
-                    _asleepConfig.value = asleepConfig
-                    _asleepUserId.value = userId
-                    userId?.let { PreferenceHelper.putAsleepUserId(applicationContext, it) }
-                    _asleepState.value = AsleepState.STATE_INITIALIZED
-                    beginSleepTracking()
-                }
-            }
-        )
+        setupAsleep {
+            requestAsleepConfig(storedUserId) { beginSleepTracking() }
+        }
     }
 }

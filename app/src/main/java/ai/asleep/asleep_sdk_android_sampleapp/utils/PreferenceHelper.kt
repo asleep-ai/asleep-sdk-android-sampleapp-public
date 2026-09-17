@@ -2,6 +2,7 @@ package ai.asleep.asleep_sdk_android_sampleapp.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import java.util.UUID
 
 class PreferenceHelper private constructor() {
 
@@ -11,6 +12,7 @@ class PreferenceHelper private constructor() {
 
         private const val ASLEEP_PREF_NAME = "asleep_prefs"
         private const val ASLEEP_USER_ID_KEY = "user_id"
+        private const val PRODUCT_SERIAL_KEY = "product_serial"
 
         private const val AUTO_TRACKING_PREF_NAME = "time_prefs"
         private const val START_TIME_HOUR_KEY = "start_time_hour"
@@ -39,6 +41,21 @@ class PreferenceHelper private constructor() {
 
         fun getAsleepUserId(context: Context): String? {
             return getAsleepPreferences(context).getString(ASLEEP_USER_ID_KEY, null)
+        }
+
+        /**
+         * Serial number reported to Asleep.setup() as the product identifier.
+         *
+         * A real product would report the identifier burned into the device. This sample has no
+         * such value, so it generates a UUID once and reuses it: the identifier has to stay
+         * stable across launches, or every launch would register a new product.
+         */
+        fun getOrCreateProductSerial(context: Context): String {
+            val preferences = getAsleepPreferences(context)
+            return preferences.getString(PRODUCT_SERIAL_KEY, null)
+                ?: UUID.randomUUID().toString().also {
+                    preferences.edit().putString(PRODUCT_SERIAL_KEY, it).apply()
+                }
         }
 
         private fun getAutoTrackingPreferences(context: Context): SharedPreferences {
