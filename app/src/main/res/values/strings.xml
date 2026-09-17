@@ -8,6 +8,7 @@
     <string name="status_message_notification_permission">Notification Permission: %1$s</string>
 
     <string name="button_text_start_tracking">Start Tracking</string>
+    <string name="recording_type_label">Recording Type</string>
     <string name="button_text_stop_tracking">Stop Tracking</string>
     <string name="button_text_view_report">View Report</string>
     <string name="button_text_loading">Loading...</string>
@@ -56,4 +57,7 @@
     <string name="insufficient_time_dialog_positive_button">Exit</string>
     <string name="insufficient_time_dialog_negative_button">Cancel</string>
 
+    <string name="recordings_header">Recordings</string>
+    <string name="recordings_empty">No recordings were kept for this session.</string>
+    <string name="recordings_playing_prefix">"▶ "</string>
 </resources>

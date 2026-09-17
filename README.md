@@ -1,83 +1,99 @@
-# Asleep SDK Android Sample
+# Asleep SDK Android Sample — `sample/init-beginend-complete-recording`
 
-A sample application that demonstrates how to use the Asleep Android SDK.
+> This branch is a variant of the [default branch](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/main).
+> See the default branch README for the full list of variants.
 
-- 100% Kotlin
-- AAC ViewModel based
-- Built against the latest Asleep Android SDK (3.3.0)
+> **Requires a server-side plan.** Recording files are only kept for segments the server detects,
+> so your plan must include snoring / apnea detection. Contact **platform-cs@asleep.ai** to enable
+> it on your plan.
 
-See the [Asleep SDK Android Docs](https://docs.asleep.ai/docs/android) for integration details.
+## What this branch demonstrates
 
-## Standard implementation (this branch)
+Keeping **audio recording files on the device during tracking and browsing them after the session**.
 
-This branch contains the **most standard integration**.
+Recording requires passing a `recordingPath`, and `recordingPath` **requires a `CompletableAsleepTrackingListener`**. Passing `recordingPath` with a plain `AsleepTrackingListener` is rejected by the SDK with `ERR_INVALID_PARAMETER`.
 
-| Topic | This branch |
+| Topic | default | This branch |
+|---|---|---|
+| Authentication | `initAsleepConfig(apiKey = ...)` | same |
+| Tracking | `Asleep.beginSleepTracking()` / `endSleepTracking()` | same (+ `recordingPath`, `recordingType`) |
+| Callbacks | `Asleep.AsleepTrackingListener` | `Asleep.CompletableAsleepTrackingListener` (adds `onComplete(session)`) |
+| Interim results | Polling with `Asleep.getCurrentSleepData()` | polling removed — `onComplete(session)` delivers the final report |
+| Recording | none | browse saved files with `RecordingFileManager` |
+
+### Callback order
+
+```
+onStart(sessionId) -> onPerform(seq) ... -> onFinish(sessionId) -> onComplete(session)
+```
+
+`onFinish()` only means **the session was closed** — the analysis is not done yet. The final report and the recording files that survived filtering are ready at `onComplete()`. That is also why navigation to the report screen happens in `onComplete()`.
+
+> If the server cannot finish the analysis within 30 seconds, `onFail(ERR_COMPLETE_TIMEOUT)` arrives instead of `onComplete()`. The app returns to idle, and the report can be checked later with "View Report".
+
+## Changes from default
+
+### `ui/main/AsleepViewModel.kt`
+
+- The listener becomes `Asleep.CompletableAsleepTrackingListener` with `onComplete(session: Session?)` added
+- `Asleep.getCurrentSleepData()` polling is removed
+- The recording path is set to `filesDir/recordings` and passed to the begin call
+
+  ```kotlin
+  Asleep.beginSleepTracking(
+      asleepConfig = it,
+      completableAsleepTrackingListener = completableAsleepTrackingListener,
+      notificationTitle = applicationContext.getString(R.string.app_name),
+      notificationText = "",
+      notificationIcon = R.mipmap.ic_sampleapp,
+      notificationClass = MainActivity::class.java,
+      recordingPath = recordingPath,
+      recordingType = recordingType
+  )
+  ```
+
+- After the session ends, the saved file list is logged through `Asleep.createRecordingFileManager()`
+
+  ```kotlin
+  val recordingFileManager = Asleep.createRecordingFileManager(recordingPath)
+  val segments = recordingFileManager.getAllSegments(sessionId)
+  ```
+
+  `RecordingFile` exposes `filePath`, `segmentIndex`, `maxDb`, `isSnoringDetected`, `isBreathDetected`, `timestamp`, `snoreIntensity`, and `breathSeverity`. Use `getSnoringFiles()` / `getBreathFiles()` to pick only snoring or apnea segments.
+
+### `res/layout/activity_main.xml`, `res/values/arrays.xml`, `res/values/strings.xml`
+
+Adds a Spinner (`sp_recording_type`) for choosing the `RecordingType` before starting a session.
+
+### `ui/main/MainActivity.kt`
+
+Converts the selected Spinner position into a `RecordingType` and passes it to `beginSleepTracking()`.
+
+## RecordingType
+
+`recordingType` narrows, **within what the server Plan allows**, which segments the app wants to keep. It only has meaning together with `recordingPath`.
+
+| Value | Kept segments |
 |---|---|
-| Authentication | `Asleep.initAsleepConfig(apiKey = ...)` — direct API Key initialization |
-| Tracking | `Asleep.beginSleepTracking()` / `Asleep.endSleepTracking()` — the SDK's built-in Foreground Service |
-| Callbacks | `Asleep.AsleepTrackingListener` (`onStart` / `onPerform` / `onFinish` / `onFail`) |
-| Interim results | Polling with `Asleep.getCurrentSleepData()` |
-| Reports | Session list and details via `Asleep.createReports()` |
+| `ALL` (default) | snoring + apnea segments |
+| `SNORING_ONLY` | snoring segments only |
+| `BREATH_ONLY` | apnea segments only |
 
-## Sample branches
+## Setup
 
-Each branch below starts from this one and changes **a single integration decision**, so you can diff exactly the part you need.
-
-| Branch | What it demonstrates |
-|---|---|
-| [`main`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/main) (default) | The standard integration described above — API Key + `beginSleepTracking()` + polling |
-| [`sample/init-startstop-polling`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/sample/init-startstop-polling) | Driving tracking directly with `SleepTrackingManager.startSleepTracking()` / `stopSleepTracking()` |
-| [`sample/init-beginend-complete-recording`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/sample/init-beginend-complete-recording) | Keeping recording files with `CompletableAsleepTrackingListener` + `recordingPath` / `RecordingType` |
-| [`sample/setup-product-beginend-polling`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/sample/setup-product-beginend-polling) | Registering the device as a product with `Asleep.setup()` + `ProductInfo` before initialization |
-| [`sample/init-appid-beginend-polling`](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/sample/init-appid-beginend-polling) | Authenticating with `appId` / `appSecret` tokens instead of an API Key |
-
-## Features
-
-- Requests microphone and notification permissions for sleep tracking
-- Optionally requests a battery-optimization exemption
-- Runs sleep tracking while showing progress on screen
-- Shows the report of the session that just ended
-- Browses the report list in date order, newest or oldest first
-
-## Things to check
-
-- If sleep tracking does not work, check the following:
-    1. The device microphone works
-    2. The Foreground Service notification is visible
-- The battery-optimization exemption is not required, but it helps keep the device out of Doze mode.
-- A meaningful report needs at least 5 minutes of tracking (10+ uploads).
-
-## How to run
-
-1. Clone or download this project.
-2. Add your issued API Key to `local.properties` in the project root.
+1. Add your issued API Key to `local.properties` in the project root.
 
    ```properties
    asleep_api_key="YOUR_API_KEY"
    ```
 
-   > `local.properties` is covered by `.gitignore`. Never commit your API Key.
+2. Run in Android Studio.
+3. Before starting a session, choose the segments to keep with the **Recording Type** Spinner at the top of the screen.
+4. After the session ends, check the saved file list in Logcat under the `AsleepViewModel` tag.
 
-3. Run in Android Studio. Gradle and Android SDK components may need to be downloaded.
+> Recording files are stored in the app's internal storage (`filesDir/recordings/audio/{sessionId}/`). The SDK fails with `ERR_INSUFFICIENT_STORAGE` when less than 200MB is free at session start.
 
-### Build environment
+## See also
 
-| Item | Version |
-|---|---|
-| compileSdk | 34 |
-| minSdk | 24 |
-| targetSdk | 34 |
-| Gradle | 8.7 |
-| Android Gradle Plugin | 8.5.1 |
-| Kotlin | 1.9.24 |
-| JDK | 17 |
-| Asleep SDK | 3.3.0 |
-
-## Feedback and questions
-
-Leave feedback or questions [here](https://docs.asleep.ai/discuss).
-
-## License
-
-See [here](https://docs.asleep.ai/) for the sample app license.
+- [Asleep SDK Android Docs](https://docs.asleep.ai/docs/android)
+- [Back to the default branch](https://github.com/asleep-ai/asleep-sdk-android-sampleapp-public/tree/main)

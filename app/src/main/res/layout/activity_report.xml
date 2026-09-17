@@ -124,6 +124,31 @@
                 android:layout_height="wrap_content"
                 tools:text="Description of snoring stages"
                 android:textIsSelectable="true" />
+
+            <TextView
+                android:id="@+id/tv_recordings_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/recordings_header"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_recordings_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/recordings_empty"
+                android:visibility="gone" />
+
+            <!-- One row per saved segment is added here from ReportActivity; tapping a row
+                 plays / stops that file. -->
+            <LinearLayout
+                android:id="@+id/layout_recordings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="vertical" />
         </LinearLayout>
 
     </ScrollView>

@@ -10,19 +10,31 @@ import ai.asleep.asleep_sdk_android_sampleapp.utils.changeTimeFormat
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getDateOnly
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getTimeOnly
 import ai.asleep.asleep_sdk_android_sampleapp.utils.showErrorDialog
+import ai.asleep.asleepsdk.Asleep
 import ai.asleep.asleepsdk.data.Report
+import ai.asleep.asleepsdk.recorder.RecordingFile
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.view.View
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 
 @AndroidEntryPoint
 class ReportActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReportBinding
     private val reportViewModel: ReportViewModel by viewModels()
+
+    // Same path the tracking side records into (see AsleepViewModel.recordingPath).
+    private val recordingPath: String by lazy { File(filesDir, "recordings").absolutePath }
+    private var mediaPlayer: MediaPlayer? = null
+    private var playingPath: String? = null
+    private var playingRow: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,6 +95,78 @@ class ReportActivity : AppCompatActivity() {
 
         sleepStageItem(report)
         snoringStageItem(report)
+        showRecordings(report.session?.id)
+    }
+
+    /* Lists the recording files kept for the shown session and plays one on tap. Only sessions
+       recorded on this device (into this branch's recordingPath) have files; anything else just
+       shows the empty message. */
+    private fun showRecordings(sessionId: String?) {
+        stopPlayback()
+        binding.layoutRecordings.removeAllViews()
+
+        val files = sessionId?.let {
+            runCatching { Asleep.createRecordingFileManager(recordingPath).getAllSegments(it) }
+                .getOrDefault(emptyList())
+        }.orEmpty().filter { it.filePath != null }
+
+        binding.tvRecordingsEmpty.visibility = if (files.isEmpty()) View.VISIBLE else View.GONE
+        files.forEach { binding.layoutRecordings.addView(makeRecordingRow(it)) }
+    }
+
+    private fun makeRecordingRow(file: RecordingFile): TextView {
+        val label = buildString {
+            append("#%03d".format(file.segmentIndex))
+            file.timestamp?.takeIf { it.length >= 19 }?.let { append("  ${it.substring(11, 19)}") }
+            if (file.isSnoringDetected) append("  snoring(%.1f)".format(file.snoreIntensity))
+            if (file.isBreathDetected) append("  breath(%.1f)".format(file.breathSeverity))
+            append("  %.1fdB".format(file.maxDb))
+        }
+        return TextView(this).apply {
+            text = label
+            tag = label
+            textSize = 14f
+            setPadding(8, 12, 8, 12)
+            setOnClickListener { togglePlayback(file.filePath!!, this) }
+        }
+    }
+
+    private fun togglePlayback(path: String, row: TextView) {
+        if (playingPath == path) {
+            stopPlayback()
+            return
+        }
+        stopPlayback()
+        runCatching {
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(path)
+                prepare()
+                start()
+                setOnCompletionListener { stopPlayback() }
+            }
+            playingPath = path
+            playingRow = row
+            row.text = getString(R.string.recordings_playing_prefix) + row.tag
+        }.onFailure {
+            stopPlayback()
+            Toast.makeText(this, "Playback failed: ${it.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun stopPlayback() {
+        mediaPlayer?.let { player ->
+            runCatching { player.stop() }
+            player.release()
+        }
+        mediaPlayer = null
+        playingPath = null
+        playingRow?.let { it.text = it.tag as String }
+        playingRow = null
+    }
+
+    override fun onStop() {
+        super.onStop()
+        stopPlayback()
     }
 
     private fun setCurrentReportDate(report: Report) {

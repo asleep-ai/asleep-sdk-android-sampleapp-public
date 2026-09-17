@@ -11,8 +11,10 @@ import ai.asleep.asleep_sdk_android_sampleapp.utils.getCurrentTime
 import ai.asleep.asleep_sdk_android_sampleapp.utils.isWarning
 import ai.asleep.asleepsdk.Asleep
 import ai.asleep.asleepsdk.data.AsleepConfig
+import ai.asleep.asleepsdk.data.RecordingType
 import ai.asleep.asleepsdk.data.Session
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -20,8 +22,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 import javax.inject.Inject
 import kotlin.math.abs
+
+private const val TAG = "AsleepViewModel"
 
 @HiltViewModel
 class AsleepViewModel @Inject constructor(
@@ -34,6 +39,16 @@ class AsleepViewModel @Inject constructor(
 
     private var _asleepConfig = MutableLiveData<AsleepConfig?>(null)
 
+    /**
+     * Directory the SDK writes the recordings into.
+     *
+     * Only the segments the server flagged are kept, and the filtering runs after the session is
+     * closed - so the files are in place once onComplete() has been delivered.
+     */
+    private val recordingPath: String by lazy {
+        File(applicationContext.filesDir, "recordings").apply { mkdirs() }.absolutePath
+    }
+
     // Step 2~4: Tracking
     private var _sessionId = MutableStateFlow<String?>(null)
     val sessionId: StateFlow<String?> get() = _sessionId
@@ -41,16 +56,22 @@ class AsleepViewModel @Inject constructor(
     val sequence: LiveData<Int?> get() = _sequence
     private var _currentSleepData = MutableLiveData<Session?>(null)
     val currentSleepData: LiveData<Session?> = _currentSleepData
-    private val asleepTrackingListener = object: Asleep.AsleepTrackingListener {
+
+    /**
+     * CompletableAsleepTrackingListener adds onComplete() on top of the regular callbacks.
+     *
+     * onFinish() only means the session was closed - the server is still analysing it. The final
+     * report, and the recordings that survive the filtering, arrive in onComplete(). Passing a
+     * recordingPath requires this listener: the SDK rejects the plain AsleepTrackingListener.
+     */
+    private val completableAsleepTrackingListener = object : Asleep.CompletableAsleepTrackingListener {
         override fun onStart(sessionId: String) {
+            _sessionId.value = sessionId
             _asleepState.value = AsleepState.STATE_TRACKING_STARTED
         }
 
         override fun onPerform(sequence: Int) {
             _sequence.postValue(sequence)
-            if (sequence > 10 && (sequence % 10 == 1 || sequence - (_analyzedSeq ?: 0) > 10)) {
-                getCurrentSleepData(sequence)
-            }
         }
 
         override fun onFinish(sessionId: String?) {
@@ -59,21 +80,27 @@ class AsleepViewModel @Inject constructor(
             if (asleepState.value is AsleepState.STATE_ERROR) {
                 // Exit(Finish) due to Error
             } else {
-                // Successful Finish
-                if (enoughTrackingTime) {
-                    _shouldGoToReport.postValue(true)
-                } else {
-                    _shouldGoToReport.postValue(false)
-                }
+                // The session is closed, but the report is not ready yet - wait for onComplete().
                 _asleepState.value = AsleepState.STATE_IDLE
             }
+        }
+
+        override fun onComplete(session: Session?) {
+            Log.d(TAG, "onComplete: session=${session?.id} state=${session?.state}")
+            session?.let { _currentSleepData.postValue(it) }
+
+            logRecordingFiles(session?.id ?: _sessionId.value)
+
+            if (asleepState.value is AsleepState.STATE_ERROR) {
+                return
+            }
+            _shouldGoToReport.postValue(enoughTrackingTime)
         }
 
         override fun onFail(errorCode: Int, detail: String) {
             handleErrorOrWarning(AsleepError(errorCode, detail))
         }
     }
-    private var _analyzedSeq: Int? = null // The seq that succeeded by receiving a success callback from getCurrentSleepData()
 
     private var _asleepErrorCode = MutableLiveData<AsleepError?>(null)
     val asleepErrorCode: LiveData<AsleepError?> get() = _asleepErrorCode
@@ -135,17 +162,19 @@ class AsleepViewModel @Inject constructor(
         }
     }
 
-    fun beginSleepTracking() {
+    fun beginSleepTracking(recordingType: RecordingType = RecordingType.ALL) {
         if (_asleepState.value == AsleepState.STATE_INITIALIZED) {
             _asleepState.value = AsleepState.STATE_TRACKING_STARTING
             _asleepConfig.value?.let {
                 Asleep.beginSleepTracking(
                     asleepConfig = it,
-                    asleepTrackingListener = asleepTrackingListener,
+                    completableAsleepTrackingListener = completableAsleepTrackingListener,
                     notificationTitle = applicationContext.getString(R.string.app_name),
                     notificationText = "",
                     notificationIcon = R.mipmap.ic_sampleapp,
-                    notificationClass = MainActivity::class.java
+                    notificationClass = MainActivity::class.java,
+                    recordingPath = recordingPath,
+                    recordingType = recordingType
                 )
             }
             PreferenceHelper.saveStartTrackingTime(applicationContext, System.currentTimeMillis())
@@ -166,23 +195,36 @@ class AsleepViewModel @Inject constructor(
     }
 
     fun connectSleepTracking() {
-        Asleep.connectSleepTracking(asleepTrackingListener)
+        Asleep.connectSleepTracking(completableAsleepTrackingListener)
         _asleepUserId.value = PreferenceHelper.getAsleepUserId(applicationContext)
         _asleepState.value = AsleepState.STATE_TRACKING_STARTED
     }
 
-    private fun getCurrentSleepData(seq: Int) {
-        Asleep.getCurrentSleepData(
-            asleepSleepDataListener = object : Asleep.AsleepSleepDataListener {
-                override fun onFail(errorCode: Int, detail: String) {
-                    handleErrorOrWarning(AsleepError(errorCode, detail))
-                }
-                override fun onSleepDataReceived(session: Session) {
-                    _currentSleepData.postValue(session)
-                    _analyzedSeq = seq
-                }
+    /**
+     * Lists what the SDK kept for the finished session.
+     *
+     * Reading the segment index touches the filesystem, and onComplete() is delivered on the main
+     * looper, so the lookup runs on its own thread.
+     */
+    private fun logRecordingFiles(sessionId: String?) {
+        if (sessionId == null) {
+            Log.w(TAG, "No session id - skipping the recording lookup")
+            return
+        }
+
+        Thread {
+            val recordingFileManager = Asleep.createRecordingFileManager(recordingPath)
+            val segments = recordingFileManager.getAllSegments(sessionId)
+            Log.d(TAG, "Recordings for $sessionId: ${segments.size} segment(s) kept")
+            segments.forEach {
+                Log.d(
+                    TAG,
+                    "seq=${it.segmentIndex} snoring=${it.isSnoringDetected} " +
+                        "breath=${it.isBreathDetected} maxDb=${it.maxDb} path=${it.filePath}"
+                )
             }
-        )
+            Log.d(TAG, "Stored sessions: ${recordingFileManager.getSessions()}")
+        }.start()
     }
 
     fun handleErrorOrWarning(asleepError: AsleepError) {

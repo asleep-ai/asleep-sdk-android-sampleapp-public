@@ -15,6 +15,7 @@ import ai.asleep.asleep_sdk_android_sampleapp.utils.getSleepStageText
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getSnoringStageText
 import ai.asleep.asleep_sdk_android_sampleapp.utils.showErrorDialog
 import ai.asleep.asleepsdk.Asleep
+import ai.asleep.asleepsdk.data.RecordingType
 import ai.asleep.asleepsdk.data.Session
 import android.content.Intent
 import android.os.Bundle
@@ -37,6 +38,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var permissionManager: PermissionManager
 
     private val asleepViewModel: AsleepViewModel by viewModels()
+
+    /* The spinner entries are the enum names in declaration order, so the position maps straight
+       onto RecordingType.values(). An out-of-range position falls back to ALL, the SDK default. */
+    private val selectedRecordingType: RecordingType
+        get() = RecordingType.values()
+            .getOrElse(binding.spRecordingType.selectedItemPosition) { RecordingType.ALL }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,7 +77,7 @@ class MainActivity : AppCompatActivity() {
                             text = getString(R.string.button_text_start_tracking)
                             setOnClickListener {
                                 if (permissionManager.allPermissionsGranted.value == true) {
-                                    asleepViewModel.beginSleepTracking()
+                                    asleepViewModel.beginSleepTracking(selectedRecordingType)
                                 } else {
                                     permissionManager.checkAndRequestPermissions()
                                 }

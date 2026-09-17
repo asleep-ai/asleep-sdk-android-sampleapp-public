@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Entries are the RecordingType enum names in declaration order, so the spinner position
+         maps straight onto RecordingType.values(). -->
+    <string-array name="recording_type_options">
+        <item>ALL</item>
+        <item>SNORING_ONLY</item>
+        <item>BREATH_ONLY</item>
+    </string-array>
+</resources>
