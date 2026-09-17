@@ -1,5 +1,6 @@
 package ai.asleep.asleep_sdk_android_sampleapp.ui.main
 
+import ai.asleep.asleep_sdk_android_sampleapp.R
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -49,7 +50,7 @@ class PermissionManager(private val activity: AppCompatActivity) {
 
             context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED -> {
                 if (shouldShowRequestPermissionRationale(activity, android.Manifest.permission.RECORD_AUDIO)) {
-                    showPermissionDialog()
+                    showPermissionDialog(R.string.permission_dialog_message_mic)
                 } else {
                     micPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
                 }
@@ -59,7 +60,7 @@ class PermissionManager(private val activity: AppCompatActivity) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
                     shouldShowRequestPermissionRationale(activity, android.Manifest.permission.POST_NOTIFICATIONS)
                 ) {
-                    showPermissionDialog()
+                    showPermissionDialog(R.string.permission_dialog_message_notification)
                 } else {
                     notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
                 }
@@ -95,8 +96,8 @@ class PermissionManager(private val activity: AppCompatActivity) {
         }
     }
 
-    private fun showPermissionDialog() {
-        val dialog = PermissionDialogFragment()
+    private fun showPermissionDialog(messageResId: Int) {
+        val dialog = PermissionDialogFragment.newInstance(messageResId)
         dialog.show(activity.supportFragmentManager, "PermissionDialogFragment")
     }
 }

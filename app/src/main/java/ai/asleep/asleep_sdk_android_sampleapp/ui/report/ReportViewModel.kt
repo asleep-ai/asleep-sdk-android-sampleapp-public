@@ -2,6 +2,7 @@ package ai.asleep.asleep_sdk_android_sampleapp.ui.report
 
 import ai.asleep.asleep_sdk_android_sampleapp.ui.Constants
 import ai.asleep.asleep_sdk_android_sampleapp.utils.AsleepError
+import ai.asleep.asleep_sdk_android_sampleapp.utils.SampleAsleepLogger
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getOneWeekAgoDateString
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getTodayString
 import ai.asleep.asleepsdk.Asleep
@@ -44,6 +45,11 @@ class ReportViewModel @Inject constructor(
     private var _currentReport = MutableLiveData<Report?>()
     val currentReport: LiveData<Report?> get() = _currentReport
 
+    /* Fetching the report right after a session ends can take a while (the server may still be
+       analysing), so the screen shows a spinner from entry until a report or an error arrives. */
+    private var _isLoading = MutableLiveData(true)
+    val isLoading: LiveData<Boolean> get() = _isLoading
+
     fun clearAsleepError() {
         _asleepErrorCode.value = null
     }
@@ -62,29 +68,36 @@ class ReportViewModel @Inject constructor(
         }
 
         _latestSessionId.value?.let { sessionId ->
+            _isLoading.value = true
             _reports?.getReport(sessionId, object : Reports.ReportListener {
                 override fun onFail(errorCode: Int, detail: String) {
+                    _isLoading.value = false
                     _asleepErrorCode.value = AsleepError(errorCode, detail)
                 }
 
                 override fun onSuccess(report: Report?) {
                     Log.d(TAG, "onSuccess: $report")
+                    _isLoading.value = false
                     _currentReport.value = report
                     getLatestReportInList()
                 }
             })
         } ?: run {
+            _isLoading.value = false
             Toast.makeText(applicationContext, "Can't get a latest report", Toast.LENGTH_SHORT).show()
         }
     }
 
     fun getReport(sessionId: String) {
+        _isLoading.value = true
         _reports?.getReport(sessionId, object : Reports.ReportListener {
             override fun onFail(errorCode: Int, detail: String) {
+                _isLoading.value = false
                 _asleepErrorCode.value = AsleepError(errorCode, detail)
             }
 
             override fun onSuccess(report: Report?) {
+                _isLoading.value = false
                 _currentReport.value = report
             }
         })
@@ -97,21 +110,25 @@ class ReportViewModel @Inject constructor(
             toDate = getTodayString(),
             reportsListener = object : Reports.ReportsListener {
                 override fun onFail(errorCode: Int, detail: String) {
+                    _isLoading.value = false
                     _asleepErrorCode.value = AsleepError(errorCode, detail)
                 }
 
                 override fun onSuccess(reports: List<SleepSession>?) {
                     Log.d(TAG, "onSuccess: getReportList")
                     _reportList.value = reports
-                    _reportList.value?.let { list ->
-                        if (list.isNotEmpty()) {
-                            currentIndex = 0
-                            list[currentIndex].sessionId?.let {
-                                getReport(it)
-                            } ?: run {
-                                Toast.makeText(applicationContext, "No Current Report ID", Toast.LENGTH_SHORT).show()
-                            }
+                    val list = _reportList.value
+                    if (!list.isNullOrEmpty()) {
+                        currentIndex = 0
+                        list[currentIndex].sessionId?.let {
+                            getReport(it)
+                        } ?: run {
+                            _isLoading.value = false
+                            Toast.makeText(applicationContext, "No Current Report ID", Toast.LENGTH_SHORT).show()
                         }
+                    } else {
+                        // Nothing to fetch - stop the spinner instead of waiting forever.
+                        _isLoading.value = false
                     }
                 }
             }
@@ -126,8 +143,10 @@ class ReportViewModel @Inject constructor(
             baseUrl = Constants.BASE_URL,
             callbackUrl = Constants.CALLBACK_URL,
             service = Constants.SERVICE_NAME,
+            asleepLogger = SampleAsleepLogger,
             asleepConfigListener = object : Asleep.AsleepConfigListener {
                 override fun onFail(errorCode: Int, detail: String) {
+                    _isLoading.value = false
                     _asleepErrorCode.value = AsleepError(errorCode, detail)
                 }
 

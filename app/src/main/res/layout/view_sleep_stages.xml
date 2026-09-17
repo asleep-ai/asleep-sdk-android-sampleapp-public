@@ -2,40 +2,96 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
-        android:id="@+id/awake_bar"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="32dp" />
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:text="@string/report_stage_label_awake"
+            android:textSize="12sp" />
+
+        <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+            android:id="@+id/awake_bar"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1" />
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#DDDDDD" /> <!-- Divider -->
 
-    <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
-        android:id="@+id/rem_bar"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="32dp" />
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:text="@string/report_stage_label_rem"
+            android:textSize="12sp" />
+
+        <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+            android:id="@+id/rem_bar"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1" />
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#DDDDDD" /> <!-- Divider -->
 
-    <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
-        android:id="@+id/light_bar"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="32dp" />
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:text="@string/report_stage_label_light"
+            android:textSize="12sp" />
+
+        <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+            android:id="@+id/light_bar"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1" />
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#DDDDDD" /> <!-- Divider -->
 
-    <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
-        android:id="@+id/deep_bar"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="32dp" />
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:text="@string/report_stage_label_deep"
+            android:textSize="12sp" />
+
+        <ai.asleep.asleep_sdk_android_sampleapp.ui.report.StackedBarView
+            android:id="@+id/deep_bar"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1" />
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"
@@ -48,6 +104,11 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
+
+        <!-- Keeps the times aligned with the bars, not with the row labels. -->
+        <Space
+            android:layout_width="48dp"
+            android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/tv_start_time"

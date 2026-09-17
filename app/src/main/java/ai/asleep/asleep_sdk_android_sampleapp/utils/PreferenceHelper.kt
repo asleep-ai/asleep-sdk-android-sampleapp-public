@@ -50,7 +50,7 @@ class PreferenceHelper private constructor() {
         }
 
         fun getStartHour(context: Context): Int {
-            return getAutoTrackingPreferences(context).getInt(START_TIME_HOUR_KEY, 23) // 기본값 9시
+            return getAutoTrackingPreferences(context).getInt(START_TIME_HOUR_KEY, 23) // default: 23h
         }
 
         fun putStartMinute(context: Context, minute: Int) {
@@ -58,7 +58,7 @@ class PreferenceHelper private constructor() {
         }
 
         fun getStartMinute(context: Context): Int {
-            return getAutoTrackingPreferences(context).getInt(START_TIME_MINUTE_KEY, 30) // 기본값 0분
+            return getAutoTrackingPreferences(context).getInt(START_TIME_MINUTE_KEY, 30) // default: 0 min
         }
 
         fun putEndHour(context: Context, hour: Int) {
@@ -66,7 +66,7 @@ class PreferenceHelper private constructor() {
         }
 
         fun getEndHour(context: Context): Int {
-            return getAutoTrackingPreferences(context).getInt(END_TIME_HOUR_KEY, 7) // 기본값 17시
+            return getAutoTrackingPreferences(context).getInt(END_TIME_HOUR_KEY, 7) // default: 7h
         }
 
         fun putEndMinute(context: Context, minute: Int) {
@@ -74,7 +74,7 @@ class PreferenceHelper private constructor() {
         }
 
         fun getEndMinute(context: Context): Int {
-            return getAutoTrackingPreferences(context).getInt(END_TIME_MINUTE_KEY, 0) // 기본값 0분
+            return getAutoTrackingPreferences(context).getInt(END_TIME_MINUTE_KEY, 0) // default: 0 min
         }
 
         fun putAutoTrackingEnabled(context: Context, isEnabled: Boolean) {
@@ -82,7 +82,7 @@ class PreferenceHelper private constructor() {
         }
 
         fun isAutoTrackingEnabled(context: Context): Boolean {
-            return getAutoTrackingPreferences(context).getBoolean(ENABLE_TRACKING_KEY, false) // 기본값 false
+            return getAutoTrackingPreferences(context).getBoolean(ENABLE_TRACKING_KEY, false) // default: false
         }
     }
 }

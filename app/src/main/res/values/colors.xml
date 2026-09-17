@@ -3,11 +3,21 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="blue">#FF4360E9</color>
-    
-    <!-- Sleep Stage Colors -->
-    <color name="sleep_stage_awake">#FFF8F5C5</color>
-    <color name="sleep_stage_rem">#FFE7E8FC</color>
-    <color name="sleep_stage_light">#FFC3C6F7</color>
-    <color name="sleep_stage_deep">#FF99A1F2</color>
+    <!-- Warning level errors shown in the tracking log (matches the iOS sample app). -->
+    <color name="warning">#FFFF9500</color>
+
+    <!-- Matches iOS systemGray6 used as the report content background -->
+    <color name="report_background">#FFF2F2F7</color>
+
+    <!-- Sleep Stage Colors (shared palette with the iOS sample app) -->
+    <color name="sleep_stage_awake">#FFF26F8D</color>
+    <color name="sleep_stage_rem">#FF9466BC</color>
+    <color name="sleep_stage_light">#FF66C2F0</color>
+    <color name="sleep_stage_deep">#FF426BD9</color>
+
+    <!-- Snoring Stage Colors -->
+    <color name="snoring_stage_snoring">#FFF26F8D</color>
+    <color name="snoring_stage_not_snoring">#FFDADADA</color>
+
     <color name="transparent">#00000000</color>
 </resources>

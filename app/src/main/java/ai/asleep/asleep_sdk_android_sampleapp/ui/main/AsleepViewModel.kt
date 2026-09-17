@@ -5,6 +5,7 @@ import ai.asleep.asleep_sdk_android_sampleapp.ui.Constants
 import ai.asleep.asleep_sdk_android_sampleapp.ui.Constants.MIN_TRACKING_MINUTES
 import ai.asleep.asleep_sdk_android_sampleapp.utils.AsleepError
 import ai.asleep.asleep_sdk_android_sampleapp.utils.PreferenceHelper
+import ai.asleep.asleep_sdk_android_sampleapp.utils.SampleAsleepLogger
 import ai.asleep.asleep_sdk_android_sampleapp.utils.PreferenceHelper.Companion.getStartTrackingTime
 import ai.asleep.asleep_sdk_android_sampleapp.utils.getCurrentTime
 import ai.asleep.asleep_sdk_android_sampleapp.utils.isWarning
@@ -114,6 +115,7 @@ class AsleepViewModel @Inject constructor(
                 baseUrl = Constants.BASE_URL,
                 callbackUrl = Constants.CALLBACK_URL,
                 service = Constants.SERVICE_NAME,
+                asleepLogger = SampleAsleepLogger,
                 asleepConfigListener = object : Asleep.AsleepConfigListener {
                     override fun onFail(errorCode: Int, detail: String) {
                         _asleepErrorCode.value = AsleepError(errorCode, detail)
@@ -157,6 +159,12 @@ class AsleepViewModel @Inject constructor(
         }
     }
 
+    /* shouldGoToReport is a plain LiveData, so a re-subscribing Activity would receive the old
+       `true` again and auto-navigate. The observer consumes it through this before navigating. */
+    fun clearShouldGoToReport() {
+        _shouldGoToReport.value = false
+    }
+
     fun connectSleepTracking() {
         Asleep.connectSleepTracking(asleepTrackingListener)
         _asleepUserId.value = PreferenceHelper.getAsleepUserId(applicationContext)
@@ -181,8 +189,12 @@ class AsleepViewModel @Inject constructor(
         val code = asleepError.code
         val message = asleepError.message
         if (isWarning(code)) {
+            // Keep the log free of a leading blank line so the warning box starts at its header.
             val existingMessage = _warningMessage.value
-            _warningMessage.postValue("$existingMessage\n${getCurrentTime()} $code - $message")
+            val newLine = "${getCurrentTime()} $code - $message"
+            _warningMessage.postValue(
+                if (existingMessage.isNullOrEmpty()) newLine else "$existingMessage\n$newLine"
+            )
         } else {
             _asleepErrorCode.postValue(asleepError)
             _asleepState.value = AsleepState.STATE_ERROR(asleepError)
@@ -205,6 +217,7 @@ class AsleepViewModel @Inject constructor(
             baseUrl = Constants.BASE_URL,
             callbackUrl = Constants.CALLBACK_URL,
             service = Constants.SERVICE_NAME,
+                asleepLogger = SampleAsleepLogger,
             asleepConfigListener = object : Asleep.AsleepConfigListener {
                 override fun onFail(errorCode: Int, detail: String) {
                     _asleepErrorCode.value = AsleepError(errorCode, detail)

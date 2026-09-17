@@ -12,11 +12,16 @@ import androidx.fragment.app.DialogFragment
 class PermissionDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return activity?.let { activity ->
+            val messageResId = arguments?.getInt(ARG_MESSAGE_RES_ID)
+                ?.takeIf { it != 0 } ?: R.string.permission_dialog_message_mic
             val builder = AlertDialog.Builder(activity)
             builder
                 .setTitle(getString(R.string.permission_dialog_title))
-                .setMessage(getString(R.string.permission_dialog_message))
-                .setPositiveButton(R.string.permission_dialog_positive_button) { dialog, id ->
+                .setMessage(getString(messageResId))
+                .setNegativeButton(R.string.permission_dialog_negative_button) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .setPositiveButton(R.string.permission_dialog_positive_button) { dialog, _ ->
                     val intent = Intent().apply {
                         action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                         data = Uri.parse("package:${activity.packageName}")
@@ -26,5 +31,15 @@ class PermissionDialogFragment : DialogFragment() {
                 }
             builder.create()
         } ?: throw IllegalStateException("Activity cannot be null")
+    }
+
+    companion object {
+        private const val ARG_MESSAGE_RES_ID = "message_res_id"
+
+        fun newInstance(messageResId: Int): PermissionDialogFragment {
+            return PermissionDialogFragment().apply {
+                arguments = Bundle().apply { putInt(ARG_MESSAGE_RES_ID, messageResId) }
+            }
+        }
     }
 }

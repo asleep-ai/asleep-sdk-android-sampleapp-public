@@ -36,7 +36,6 @@ class ReportActivity : AppCompatActivity() {
 
         val fromActivityName = intent.getStringExtra(EXTRA_FROM_STATE)
         reportViewModel.asleepUserId.observe(this) { asleepUserId ->
-            binding.tvAsleepUserId.text = getString(R.string.status_message_asleep_id, asleepUserId)
             asleepUserId?.let {
                 if (fromActivityName.equals(Constants.StateName.INIT.name)) {
                     reportViewModel.getLatestReportInList()
@@ -52,12 +51,18 @@ class ReportActivity : AppCompatActivity() {
             }
         }
 
+        reportViewModel.isLoading.observe(this) { isLoading ->
+            binding.progressLoading.visibility =
+                if (isLoading) android.view.View.VISIBLE else android.view.View.GONE
+        }
+
         reportViewModel.asleepErrorCode.observe(this) { errorCode ->
             errorCode?.let { showErrorDialog(supportFragmentManager) }
         }
 
         binding.btnPrev.setOnClickListener { reportViewModel.showOlderReport() }
         binding.btnNext.setOnClickListener { reportViewModel.showNewerReport() }
+        binding.btnClose.setOnClickListener { finish() }
     }
 
     private fun initAsleepConfig(asleepUserId: String?) {
@@ -88,11 +93,17 @@ class ReportActivity : AppCompatActivity() {
         }
     }
 
+    /* Time Range is the analysed range, Measured is the range actually recorded on the device.
+       They differ when a session is closed with an explicit measurement window. */
     private fun getReportText(report: Report): String {
+        val notAvailable = getString(R.string.report_value_not_available)
+        val measuredStart = changeTimeFormat(report.session?.measurementStartTime) ?: notAvailable
+        val measuredEnd = changeTimeFormat(report.session?.measurementEndTime) ?: notAvailable
         return  "Time Range : ${changeTimeFormat(report.session?.startTime)} ~ ${changeTimeFormat(report.session?.endTime)}\n" +
+                "Measured : $measuredStart ~ $measuredEnd\n" +
                 "Unexpected End Time : ${changeTimeFormat(report.session?.unexpectedEndTime)}\n" +
                 "Session State : ${report.session?.state}\n" +
-                "Missing Data Ratio : ${report.missingDataRatio * 100}%\n" +
+                "Missing Data Ratio : ${String.format(java.util.Locale.US, "%.1f%%", report.missingDataRatio * 100)}\n" +
                 "Peculiarities : ${report.peculiarities}"
     }
 
@@ -117,7 +128,6 @@ class ReportActivity : AppCompatActivity() {
                 setEndTime(session.endTime?.let { getTimeOnly(it) } ?: "end time is null")
             }
         }
-//        binding.tvSleepStages.text = report.session?.sleepStages.toString()
     }
 
     private fun snoringStageItem(report: Report) {
@@ -127,13 +137,13 @@ class ReportActivity : AppCompatActivity() {
             val snoringSlices = makeSlice(
                 stages = snoringStages,
                 targetValue = snoringValue,
-                mainColor = 0xFFF26F8D.toInt(),
-                otherColor = 0xFFDADADA.toInt()
+                mainColor = ContextCompat.getColor(this, R.color.snoring_stage_snoring),
+                otherColor = ContextCompat.getColor(this, R.color.snoring_stage_not_snoring)
             )
             binding.viewSnoringStages.slices = snoringSlices
 
             binding.tvSnoringStages.text = report.stat?.let {
-                "${getString(R.string.report_label_snoring_ratio)} ${(it.snoringRatio ?: 0.0f) * 100}%"
+                "${getString(R.string.report_label_snoring_ratio)} ${String.format(java.util.Locale.US, "%.1f%%", (it.snoringRatio ?: 0.0f) * 100)}"
             } ?: getString(R.string.report_msg_snoring_ratio_cannot_checked)
         }
     }

@@ -7,11 +7,11 @@ import java.util.Locale
 
 private fun parseToDate(time: String): Date? {
     return try {
-        // minSdk 24 이상에서는 SimpleDateFormat에서 XXX (ISO 8601 시간대)를 지원합니다.
+        // SimpleDateFormat supports XXX (ISO 8601 time zone) on minSdk 24+.
         val inputFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
         inputFormatter.parse(time)
     } catch (e: java.text.ParseException) {
-        // 파싱 실패 시 에러를 기록하는 것이 좋습니다.
+        // Consider logging the error when parsing fails.
          Log.e("TimeUtils", "Failed to parse time: $time", e)
         null
     }
@@ -35,6 +35,10 @@ internal fun getDateOnly(time: String): String {
     return parseToDate(time)?.let { date ->
         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
     } ?: ""
+}
+
+internal fun formatTimestamp(timeInMillis: Long): String {
+    return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(timeInMillis))
 }
 
 internal fun getCurrentTime(): String {

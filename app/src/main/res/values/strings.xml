@@ -2,7 +2,7 @@
     <string name="app_name">Asleep SDK Sample App</string>
     <string name="app_title">Asleep SDK</string>
 
-    <string name="status_message_asleep_id">Asleep ID: %1$s</string>
+    <string name="status_message_asleep_id">User ID: %1$s</string>
     <string name="status_message_ignore_battery_optimization">Ignore Battery Optimization: %1$s</string>
     <string name="status_message_microphone_permission">Microphone Permission: %1$s</string>
     <string name="status_message_notification_permission">Notification Permission: %1$s</string>
@@ -10,22 +10,47 @@
     <string name="button_text_start_tracking">Start Tracking</string>
     <string name="button_text_stop_tracking">Stop Tracking</string>
     <string name="button_text_view_report">View Report</string>
+    <string name="button_text_loading">Loading...</string>
+    <string name="button_text_initializing">Initializing...</string>
 
     <string name="report_subtitle_sleep_stages">Sleep Stages</string>
     <string name="report_subtitle_snoring_stages">Snoring Stages</string>
     <string name="report_label_snoring_ratio">Snoring Ratio:</string>
+    <string name="report_stage_label_awake">Awake</string>
+    <string name="report_stage_label_rem">REM</string>
+    <string name="report_stage_label_light">Light</string>
+    <string name="report_stage_label_deep">Deep</string>
+    <string name="report_value_not_available">N/A</string>
     <string name="report_msg_snoring_ratio_cannot_checked">The Snoring Ratio cannot be checked.</string>
 
-    <string name="tracking_title">Tracking Sleep....</string>
-    <string name="tracking_label_start_time">Start Time:</string>
-    <string name="tracking_label_uploaded_sequence">Uploaded Sequence :\t</string>
-    <string name="tracking_label_minute_elapsed">(%1$.1f min.)</string>
-    <string name="tracking_msg_report_guidance">Upload every 30 seconds.\n\n To obtain the valid report,\n you must upload 5+ minutes(9+ sequences).</string>
+    <string name="tracking_title">Tracking Sleep...</string>
+    <string name="tracking_label_start_time">Start Time : %1$s</string>
+    <string name="tracking_label_uploaded_sequence">Uploaded Sequence : %1$s (%2$s min.)</string>
+    <string name="tracking_label_current_sleep_stage">Current Sleep Stage : %1$d (%2$s)</string>
+    <string name="tracking_label_current_snoring_stage">Current Snoring Stage : %1$d (%2$s)</string>
+    <string name="tracking_msg_upload_interval">Upload every 30 seconds.</string>
+    <string name="tracking_msg_report_guidance">To obtain a valid report, you must track for at least 5 minutes (10+ uploads).</string>
+    <string name="tracking_warning_header">⚠️ Errors (Not Critical, Warning Level)</string>
+    <string name="tracking_done_title">Tracking Done!</string>
+    <string name="tracking_done_session_id">Session ID: %1$s</string>
+
+    <string name="sleep_stage_label_awake">Awake</string>
+    <string name="sleep_stage_label_light">Light Sleep</string>
+    <string name="sleep_stage_label_deep">Deep Sleep</string>
+    <string name="sleep_stage_label_rem">REM Sleep</string>
+    <string name="sleep_stage_label_unknown">Unknown</string>
+    <string name="snoring_stage_label_snoring">Snoring</string>
+    <string name="snoring_stage_label_not_snoring">Not Snoring</string>
+
+    <string name="content_description_asleep_logo">Asleep logo</string>
 
     <string name="dialog_confirm_button">OK</string>
+    <string name="report_close_button">Close</string>
     <string name="permission_dialog_title">Allow Access Permission</string>
-    <string name="permission_dialog_message">To start sleep tracking, permission is required. Please allow access permission in the settings.</string>
+    <string name="permission_dialog_message_mic">Microphone permission is required for sleep tracking. Please enable it in Settings.</string>
+    <string name="permission_dialog_message_notification">Notification permission is required for sleep tracking. Please enable it in Settings.</string>
     <string name="permission_dialog_positive_button">Go to Settings</string>
+    <string name="permission_dialog_negative_button">Cancel</string>
     <string name="insufficient_time_dialog_title">Invalid report provided</string>
     <string name="insufficient_time_dialog_message">You need to track for at least %1$d minutes to receive a sleep report. Do you want to exit without a report?</string>
     <string name="insufficient_time_dialog_positive_button">Exit</string>

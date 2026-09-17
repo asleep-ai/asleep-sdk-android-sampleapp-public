@@ -5,26 +5,19 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
     tools:context=".ui.report.ReportActivity">
 
-    <LinearLayout
-        android:id="@+id/layout_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
+    <ImageButton
+        android:id="@+id/btn_close"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@null"
+        android:src="@drawable/ic_close"
+        android:contentDescription="@string/report_close_button"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/tv_asleep_user_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="true"
-            tools:text="Asleep ID: " />
-
-    </LinearLayout>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/layout_date_navigation"
@@ -32,8 +25,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layout_id"
+        app:layout_constraintTop_toBottomOf="@+id/btn_close"
         app:layout_constraintBottom_toTopOf="@id/sv_report"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -69,8 +63,8 @@
         android:id="@+id/sv_report"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginVertical="16dp"
-        android:background="@drawable/border_rectangle_black"
+        android:layout_marginTop="16dp"
+        android:background="@color/report_background"
         app:layout_constraintTop_toBottomOf="@id/layout_date_navigation"
         app:layout_constraintBottom_toBottomOf="parent">
 
@@ -112,13 +106,6 @@
                 android:layout_marginVertical="16dp"/>
 
             <TextView
-                android:id="@+id/tv_sleep_stages"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:text="Description of sleep stages"
-                android:textIsSelectable="true" />
-
-            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/report_subtitle_snoring_stages"
@@ -140,5 +127,17 @@
         </LinearLayout>
 
     </ScrollView>
+
+    <!-- Shown from entry until the report (or an error) arrives - fetching right after a
+         session ends can take a while because the server may still be analysing. -->
+    <ProgressBar
+        android:id="@+id/progress_loading"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
