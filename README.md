@@ -4,7 +4,7 @@ A sample application that demonstrates how to use the Asleep Android SDK.
 
 - 100% Kotlin
 - AAC ViewModel based
-- Built against the latest Asleep Android SDK (3.3.0)
+- Built against the latest Asleep Android SDK (3.3.1)
 
 See the [Asleep SDK Android Docs](https://docs.asleep.ai/docs/android) for integration details.
 
@@ -72,7 +72,7 @@ Each branch below starts from this one and changes **a single integration decisi
 | Android Gradle Plugin | 8.5.1 |
 | Kotlin | 1.9.24 |
 | JDK | 17 |
-| Asleep SDK | 3.3.0 |
+| Asleep SDK | 3.3.1 |
 
 ## Feedback and questions
 
