@@ -6,7 +6,7 @@ A sample application that demonstrates how to use the Asleep Android SDK.
 - AAC ViewModel based
 - Built against the latest Asleep Android SDK (3.3.1)
 
-See the [Asleep SDK Android Docs](https://docs.asleep.ai/docs/android) for integration details.
+See the [Asleep SDK Android Docs](https://docs.asleep.ai/docs/android-get-started) for integration details.
 
 ## Standard implementation (this branch)
 
